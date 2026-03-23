@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Distributed Data Analysis — Lecture 3: Synchronization</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Fraunces:ital,wght@0,300;0,700;0,900;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#07080f; --panel:#0d0f1a; --panel2:#111320;
+  --border:#1a1d30; --border2:#222640;
+  --accent:#4fffb0; --accent2:#ff6b6b; --accent3:#ffc947; --accent4:#7c83ff;
+  --text:#dde0f0; --muted:#5a5f80; --muted2:#3a3f60;
+  --r: 6px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Fraunces',serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;height:100vh;}
+
+/* TOP BAR */
+.topbar{display:flex;align-items:center;gap:1rem;padding:.7rem 1.5rem;border-bottom:1px solid var(--border);background:var(--panel);flex-shrink:0;}
+.topbar .badge{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.12em;background:var(--accent4);color:#000;padding:.2rem .55rem;border-radius:2px;}
+.topbar h1{font-size:1rem;font-weight:700;letter-spacing:-.01em;}
+.topbar h1 span{color:var(--accent);}
+.topbar .sub{font-family:'IBM Plex Mono',monospace;font-size:.58rem;color:var(--muted);margin-left:auto;}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--panel);flex-shrink:0;overflow-x:auto;}
+.tab-btn{font-family:'IBM Plex Mono',monospace;font-size:.65rem;letter-spacing:.06em;padding:.75rem 1.3rem;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;transition:all .2s;white-space:nowrap;}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-btn.home-tab{color:var(--accent3);}
+.tab-btn.home-tab.active{color:var(--accent3);border-bottom-color:var(--accent3);}
+
+/* LAYOUT */
+.workspace{display:flex;flex:1;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:260px;min-width:260px;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;background:var(--panel);}
+.sidebar-header{padding:1rem;border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;}
+.sidebar-body{flex:1;overflow-y:auto;padding:.75rem;}
+.side-card{background:var(--panel2);border:1px solid var(--border);border-radius:var(--r);padding:.85rem 1rem;margin-bottom:.6rem;cursor:pointer;transition:all .2s;position:relative;}
+.side-card:hover,.side-card.active{border-color:var(--accent);background:#0d1520;}
+.side-card.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);border-radius:3px 0 0 3px;}
+.side-card h3{font-size:.82rem;font-weight:700;margin-bottom:.25rem;}
+.side-card .page-ref{font-family:'IBM Plex Mono',monospace;font-size:.58rem;color:var(--accent3);margin-bottom:.35rem;}
+.side-card p{font-size:.7rem;color:var(--muted);line-height:1.5;}
+.legend-section{padding:.75rem 1rem;border-top:1px solid var(--border);}
+.legend-title{font-family:'IBM Plex Mono',monospace;font-size:.58rem;letter-spacing:.1em;color:var(--muted);margin-bottom:.5rem;}
+.legend-item{display:flex;align-items:center;gap:.5rem;font-size:.68rem;color:var(--muted);margin-bottom:.35rem;}
+.ldot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.canvas-wrap{flex:1;position:relative;overflow:hidden;}
+canvas{position:absolute;top:0;left:0;}
+
+/* LOG */
+.log-wrap{height:140px;border-top:1px solid var(--border);background:#08090f;display:flex;flex-direction:column;flex-shrink:0;}
+.log-header{font-family:'IBM Plex Mono',monospace;font-size:.58rem;letter-spacing:.1em;color:var(--muted);padding:.6rem 1rem .3rem;flex-shrink:0;}
+.log-body{flex:1;overflow-y:auto;padding:0 1rem .5rem;}
+.log-entry{font-size:.78rem;line-height:1.6;padding:.18rem 0 .18rem .7rem;border-left:2px solid transparent;color:var(--muted);font-family:'Fraunces',serif;}
+.log-entry.active{color:var(--text);border-color:var(--accent);}
+.log-entry .sn{font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:var(--accent);margin-right:.4rem;}
+
+/* CONTROLS */
+.controls{display:flex;align-items:center;gap:.7rem;padding:.7rem 1rem;border-top:1px solid var(--border);background:var(--panel);flex-shrink:0;}
+.btn{font-family:'IBM Plex Mono',monospace;font-size:.65rem;letter-spacing:.05em;padding:.45rem 1rem;border:1px solid var(--border2);background:none;color:var(--text);cursor:pointer;border-radius:3px;transition:all .2s;}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn.primary{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600;}
+.btn.primary:hover{background:#36e89a;}
+.btn:disabled{opacity:.3;cursor:not-allowed;}
+.step-info{font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:var(--muted);margin-left:auto;}
+.speed-label{font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:var(--muted);}
+input[type=range]{accent-color:var(--accent);width:70px;}
+.prog-wrap{height:2px;background:var(--border);flex-shrink:0;}
+.prog-bar{height:100%;background:var(--accent);transition:width .25s;}
+
+/* HOME PAGE */
+#home-page{display:none;flex:1;overflow-y:auto;padding:2rem 2.5rem;}
+#home-page.visible{display:block;}
+.home-title{font-size:2rem;font-weight:900;letter-spacing:-.03em;margin-bottom:.3rem;}
+.home-title span{color:var(--accent);}
+.home-subtitle{font-size:.85rem;color:var(--muted);font-style:italic;margin-bottom:2rem;}
+.home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:1.2rem;margin-bottom:2rem;}
+.home-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:1.4rem;transition:border-color .2s;}
+.home-card:hover{border-color:var(--border2);}
+.home-card .hc-tag{font-family:'IBM Plex Mono',monospace;font-size:.58rem;letter-spacing:.1em;color:var(--accent4);margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem;}
+.home-card .hc-tag .pg{background:var(--panel2);border:1px solid var(--border2);padding:.15rem .45rem;border-radius:2px;color:var(--accent3);}
+.home-card h2{font-size:1rem;font-weight:700;margin-bottom:.6rem;}
+.home-card p{font-size:.78rem;color:var(--muted);line-height:1.7;}
+.home-card ul{margin:.5rem 0 0 1rem;}
+.home-card ul li{font-size:.76rem;color:var(--muted);line-height:1.7;}
+.home-card ul li strong{color:var(--text);}
+.home-divider{font-family:'IBM Plex Mono',monospace;font-size:.65rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;padding:.5rem 0;border-bottom:1px solid var(--border);margin:1.5rem 0 1rem;}
+.formula-box{background:var(--panel2);border:1px solid var(--border2);border-radius:4px;padding:.6rem 1rem;font-family:'IBM Plex Mono',monospace;font-size:.75rem;color:var(--accent3);margin:.6rem 0;}
+
+/* CANVAS PAGE */
+#canvas-page{display:none;flex:1;flex-direction:column;overflow:hidden;}
+#canvas-page.visible{display:flex;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="badge">LECTURE 3</div>
+  <h1>Distributed Data Analysis — <span>Synchronization</span></h1>
+  <div class="sub">Time · Physical Clocks · Logical Clocks · Vector Clocks</div>
+</div>
+
+<div class="tabs" id="tabs">
+  <button class="tab-btn home-tab active" onclick="showHome()">🏠 OVERVIEW</button>
+  <button class="tab-btn" onclick="showSim(0)">01 · Why Sync?</button>
+  <button class="tab-btn" onclick="showSim(1)">02 · Cristian's Algorithm</button>
+  <button class="tab-btn" onclick="showSim(2)">03 · Berkeley Algorithm</button>
+  <button class="tab-btn" onclick="showSim(3)">04 · Lamport Clocks</button>
+  <button class="tab-btn" onclick="showSim(4)">05 · Vector Clocks</button>
+</div>
+
+<!-- HOME PAGE -->
+<div id="home-page" class="visible">
+  <div class="home-title">Distributed <span>Time & Synchronization</span></div>
+  <div class="home-subtitle">Lecture 3 — Physical Clocks · Clock Sync Algorithms · Logical Clocks · Vector Clocks · Causal Ordering</div>
+
+  <div class="home-divider">Part 1 — The Problem of Time in Distributed Systems</div>
+  <div class="home-grid">
+
+    <div class="home-card">
+      <div class="hc-tag">MOTIVATION <span class="pg">Slides 3–5</span></div>
+      <h2>Why Does Synchronization Matter?</h2>
+      <p>In a distributed system, each machine runs its own independent clock. These clocks drift relative to each other, creating severe problems:</p>
+      <ul>
+        <li><strong>Event ordering:</strong> Which sharpshooter in a multiplayer game killed the target first?</li>
+        <li><strong>Log consistency:</strong> Server A timestamps a purchase at 9:15:32 but Server B's "flight full" log shows 9:10:10 — causing logical impossibilities.</li>
+        <li><strong>Mutual exclusion:</strong> Many distributed algorithms require agreement on event order.</li>
+        <li><strong>Fundamental limit:</strong> We cannot timestamp events across nodes precisely enough to always determine their true causal order.</li>
+      </ul>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">PHYSICAL TIME <span class="pg">Slides 8–12</span></div>
+      <h2>Physical Clocks & UTC</h2>
+      <p>How real time is defined and maintained:</p>
+      <ul>
+        <li><strong>Solar day:</strong> 1/86400 of the mean solar day — but Earth's rotation varies.</li>
+        <li><strong>TAI (International Atomic Time):</strong> Defined by cesium-133 oscillations. 9,192,631,770 cycles = 1 second. Extremely stable.</li>
+        <li><strong>UTC:</strong> TAI ± leap seconds (to stay aligned with the sun). Broadcast by radio stations like WWV in Colorado (±10 ms accuracy over the air).</li>
+        <li><strong>Computer clocks:</strong> Modern timer chips drift up to 0.86 seconds per day (relative error ~1/100,000).</li>
+        <li><strong>Clock skew:</strong> dC/dt &gt; 1 = fast clock; dC/dt &lt; 1 = slow clock; perfect clock: dC/dt = 1.</li>
+      </ul>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">INTERACTION MODEL <span class="pg">Slide 7</span></div>
+      <h2>Distributed System Model</h2>
+      <p>The formal model underlying all synchronization algorithms:</p>
+      <ul>
+        <li><strong>N processes</strong> p₁, p₂, …, pN — each runs on its own processor.</li>
+        <li><strong>No shared memory</strong> — processes communicate only by sending messages.</li>
+        <li><strong>State sᵢ:</strong> the local variable values and OS environment of process pᵢ.</li>
+        <li><strong>Actions:</strong> either state-transforming (modifying local variables) or communication actions (send/receive).</li>
+        <li>Goal: coordinate these isolated processes to agree on time and event order.</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="home-divider">Part 2 — Physical Clock Synchronization Algorithms</div>
+  <div class="home-grid">
+
+    <div class="home-card">
+      <div class="hc-tag">EXTERNAL SYNC <span class="pg">Slides 13–22</span></div>
+      <h2>Cristian's Algorithm</h2>
+      <p>A process P synchronizes with an external UTC time server S:</p>
+      <ul>
+        <li>P sends a request to S at time T₀.</li>
+        <li>S replies with its clock value C(S). P receives the reply at time T₁.</li>
+        <li>Round-trip time: RTT = T₁ − T₀.</li>
+        <li>P cannot simply set its clock to C(S) — the reply took time to arrive.</li>
+        <li><strong>Estimate:</strong> C(P) := C(S) + RTT/2</li>
+        <li><strong>Accuracy:</strong> ±(RTT/2 − min) where min is the minimum one-way latency.</li>
+      </ul>
+      <div class="formula-box">estimate = t + T_round / 2<br>accuracy = ±(T_round/2 − min)</div>
+      <p>Limitations: single point of failure, variable network delays. Mitigated by repeated requests and taking the minimum RTT.</p>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">NTP <span class="pg">Slides 15–19</span></div>
+      <h2>Network Time Protocol (NTP)</h2>
+      <p>The most widely-used clock synchronization protocol on the Internet (10–20 million servers/clients):</p>
+      <ul>
+        <li>Uses a <strong>hierarchy of time servers</strong> (strata). Stratum 1 = direct UTC source; Stratum 2 = synced from Stratum 1, etc.</li>
+        <li>NTP computes clock offset θ and round-trip delay δ using four timestamps: T₁ (client send), T₂ (server receive), T₃ (server send), T₄ (client receive).</li>
+        <li>Let a = T₁ − T₃, b = T₂ − T₄.</li>
+      </ul>
+      <div class="formula-box">θ = (a + b) / 2<br>δ = a − b</div>
+      <ul>
+        <li><strong>Accuracy:</strong> ~milliseconds on WANs, submilliseconds on LANs, submicroseconds with precision time sources.</li>
+        <li>Performs multiple trials and selects the result with minimum delay to reduce variability.</li>
+      </ul>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">INTERNAL SYNC <span class="pg">Slides 24–26</span></div>
+      <h2>Berkeley Algorithm</h2>
+      <p>An internal synchronization method — no UTC reference needed. All machines agree on a common time, even if it's not UTC-accurate:</p>
+      <ul>
+        <li>An elected <strong>master/time daemon</strong> periodically polls all slave machines for their clock values.</li>
+        <li>Master adjusts received times for RTT/latency and computes an average (ignoring outliers).</li>
+        <li>Master sends each slave the <strong>adjustment amount</strong> (positive or negative), not the absolute time — avoiding further delay-induced error.</li>
+        <li>Faulty clocks are excluded if they differ by more than a threshold.</li>
+        <li>If the master fails, a new one is elected (though election is not bounded in time).</li>
+      </ul>
+      <p style="margin-top:.5rem;font-style:italic;font-size:.75rem;color:var(--muted);">Example: daemon reads 3:00, slaves report 2:50 and 3:25 → average ~3:05 → adjustments: +5, +15, −20.</p>
+    </div>
+
+  </div>
+
+  <div class="home-divider">Part 3 — Logical Clocks & Event Ordering</div>
+  <div class="home-grid">
+
+    <div class="home-card">
+      <div class="hc-tag">LAMPORT 1978 <span class="pg">Slides 27–38</span></div>
+      <h2>Lamport's Logical Clocks</h2>
+      <p>Since physical clocks can't be perfectly synchronized, Lamport proposed ordering events by <em>causality</em>, not wall-clock time.</p>
+      <ul>
+        <li><strong>Happens-Before (→):</strong> If event a occurs before b on the same process, a→b. If p₁ sends m to p₂, send(m)→receive(m). Transitivity: a→b and b→c implies a→c.</li>
+        <li><strong>Concurrent events:</strong> if neither a→b nor b→a, then a and b are concurrent (written a ∥ b).</li>
+      </ul>
+      <div class="formula-box">Rules:<br>① Lᵢ := Lᵢ + 1 before each event<br>② Piggyback Lᵢ on sent message<br>③ On receive: Lⱼ := max(Lⱼ, t) + 1</div>
+      <p>Guarantee: if e → e′ then L(e) &lt; L(e′). But the converse is NOT guaranteed — equal or higher timestamps don't imply causality.</p>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">MATTERN & FIDGE 1989/91 <span class="pg">Slides 39–57</span></div>
+      <h2>Vector Clocks</h2>
+      <p>Lamport clocks give a partial ordering, but can't detect concurrent events. Vector clocks solve this:</p>
+      <ul>
+        <li>Each process pᵢ maintains a vector Vᵢ of N integers (one per process), initially all zero.</li>
+        <li><strong>Before event:</strong> Vᵢ[i] := Vᵢ[i] + 1</li>
+        <li><strong>Send:</strong> piggyback entire vector Vᵢ as timestamp t.</li>
+        <li><strong>Receive (m, t):</strong> Vᵢ[j] := max(Vᵢ[j], t[j]) for all j.</li>
+        <li>Vᵢ[j] (j ≠ i) = #events at Pⱼ that causally precede this event at Pᵢ.</li>
+      </ul>
+      <div class="formula-box">e → e′  ⟺  V(e) &lt; V(e′)<br>e ∥ e′  iff  V(e) &lt; V(e′) AND V(e′) &lt; V(e) — both false</div>
+      <p>Vector clocks provide a <strong>complete characterization</strong> of the happens-before relation.</p>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">APPLICATION <span class="pg">Slides 41–53</span></div>
+      <h2>Totally Ordered Multicast</h2>
+      <p>Using Lamport clocks to deliver messages in the same causal order to all replicas:</p>
+      <ul>
+        <li>Each sent message is timestamped with the sender's logical clock value.</li>
+        <li>Received messages are placed in a local queue ordered by timestamp.</li>
+        <li>The receiver multicasts an <strong>acknowledgment</strong> to all other processes.</li>
+        <li>A message is committed (delivered to the application) only when it is at the head of the queue AND acknowledged by every other process.</li>
+        <li>This guarantees all replicas see the same ordering — enabling consistent distributed writes.</li>
+      </ul>
+      <p style="margin-top:.5rem;font-size:.76rem;color:var(--accent3);">Key insight: Lamport acks always carry higher timestamps than the original message — ensuring safety.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- CANVAS PAGE -->
+<div id="canvas-page">
+  <div class="workspace">
+    <div class="sidebar">
+      <div class="sidebar-header">Key Concepts</div>
+      <div class="sidebar-body" id="sidebar-body"></div>
+      <div class="legend-section" id="legend-section"></div>
+    </div>
+    <div class="main">
+      <div class="prog-wrap"><div class="prog-bar" id="prog-bar" style="width:0%"></div></div>
+      <div class="canvas-wrap">
+        <canvas id="cv"></canvas>
+      </div>
+      <div class="log-wrap">
+        <div class="log-header">STEP LOG</div>
+        <div class="log-body" id="log-body"></div>
+      </div>
+      <div class="controls">
+        <button class="btn" id="resetBtn" onclick="resetSim()">↺ RESET</button>
+        <button class="btn" id="prevBtn" onclick="prevStep()" disabled>← PREV</button>
+        <button class="btn primary" id="playBtn" onclick="togglePlay()">▶ PLAY</button>
+        <button class="btn" id="nextBtn" onclick="nextStep()">NEXT →</button>
+        <span class="speed-label">SPEED</span>
+        <input type="range" id="speed-slider" min="400" max="2500" value="1200" oninput="updateSpeed()">
+        <span class="step-info" id="step-info">Step 1/1</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────
+let currentSim = null, stepIdx = 0, currentStep = null;
+let playing = false, playTimer = null, speed = 1200;
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let W = 0, H = 0;
+
+function resizeCanvas(){
+  const wrap = cv.parentElement;
+  W = wrap.clientWidth; H = wrap.clientHeight;
+  cv.width = W; cv.height = H;
+  if(currentStep) draw();
+}
+window.addEventListener('resize', resizeCanvas);
+
+// ─── SIMULATIONS ─────────────────────────────
+const SIMS = [
+
+  // 0 - Why Sync?
+  () => ({
+    title: 'Why Synchronization?',
+    concepts: [
+      {title:'Clock Drift',pageRef:'Slide 5',text:'Each machine uses its own physical clock. Clocks run at slightly different rates, causing them to diverge over time.'},
+      {title:'No Global Time',pageRef:'Slide 5',text:'There is no single authoritative time source visible to all nodes simultaneously.'},
+      {title:'Event Ordering Problem',pageRef:'Slides 3–4',text:'Without sync, logs from different servers can show events in impossible orders.'},
+    ],
+    legend:[
+      {color:'#4fffb0',label:'Server A'},
+      {color:'#ff6b6b',label:'Server B'},
+      {color:'#7c83ff',label:'Server C (observer)'},
+      {color:'#ffc947',label:'Message / Event'},
+    ],
+    steps:[
+      {desc:'Server A receives a client request to buy the last ticket on flight ABC 123.',
+       nodes:[
+         {x:.2,y:.35,label:'Server A\n9:15:32',color:'#4fffb0'},
+         {x:.65,y:.35,label:'Server B\n9:10:10',color:'#ff6b6b'},
+         {x:.42,y:.75,label:'Server C\n(observer)',color:'#7c83ff'},
+       ],arrows:[],note:'Clocks are NOT synchronized!',pageRef:'Slide 4'},
+      {desc:'Server A timestamps the ticket purchase at 9h:15m:32.45s.',
+       nodes:[
+         {x:.2,y:.35,label:'Server A\n✔ SOLD\n9:15:32',color:'#4fffb0'},
+         {x:.65,y:.35,label:'Server B\n9:10:10',color:'#ff6b6b'},
+         {x:.42,y:.75,label:'Server C\n(observer)',color:'#7c83ff'},
+       ],arrows:[],note:'Purchase logged at 9:15:32',pageRef:'Slide 4'},
+      {desc:'Server A sends a "flight full" notification to Server B.',
+       nodes:[
+         {x:.2,y:.35,label:'Server A\n✔ SOLD\n9:15:32',color:'#4fffb0'},
+         {x:.65,y:.35,label:'Server B\n9:10:10',color:'#ff6b6b'},
+         {x:.42,y:.75,label:'Server C\n(observer)',color:'#7c83ff'},
+       ],arrows:[{x1:.2,y1:.35,x2:.65,y2:.35,label:'flight full',color:'#ffc947'}],note:'Message sent from A → B',pageRef:'Slide 4'},
+      {desc:'Server B logs "Flight ABC 123 full" with its own local clock: 9h:10m:10.11s.',
+       nodes:[
+         {x:.2,y:.35,label:'Server A\n✔ SOLD\n9:15:32',color:'#4fffb0'},
+         {x:.65,y:.35,label:'Server B\n✘ FULL\n9:10:10',color:'#ff6b6b'},
+         {x:.42,y:.75,label:'Server C\n(observer)',color:'#7c83ff'},
+       ],arrows:[],note:'B logs "FULL" at 9:10:10 — BEFORE the purchase?!',pageRef:'Slide 4'},
+      {desc:'Server C queries both logs. It appears the flight became full BEFORE the ticket was sold — a logical impossibility!',
+       nodes:[
+         {x:.2,y:.35,label:'Server A\n✔ SOLD\n9:15:32',color:'#4fffb0'},
+         {x:.65,y:.35,label:'Server B\n✘ FULL\n9:10:10',color:'#ff6b6b'},
+         {x:.42,y:.75,label:'Server C\nCONFUSED!',color:'#7c83ff'},
+       ],arrows:[
+         {x1:.42,y1:.75,x2:.2,y2:.35,label:'query A',color:'#7c83ff'},
+         {x1:.42,y1:.75,x2:.65,y2:.35,label:'query B',color:'#7c83ff'},
+       ],note:'❌ Inconsistent state — may cause incorrect actions!',pageRef:'Slide 4'},
+    ]
+  }),
+
+  // 1 - Cristian's Algorithm
+  () => ({
+    title:"Cristian's Algorithm",
+    concepts:[
+      {title:'External Synchronization',pageRef:'Slides 13–22',text:'Process P synchronizes to an external UTC time server S by measuring round-trip time.'},
+      {title:'RTT Estimation',pageRef:'Slide 20',text:'P records times T₀ (send) and T₁ (receive). RTT = T₁ − T₀. The true server time lies in [t+min, t+RTT−min].'},
+      {title:'Accuracy Bound',pageRef:'Slide 21',text:'Error is bounded: at most ±(RTT/2 − min). Smaller RTT = more accurate estimate.'},
+    ],
+    legend:[
+      {color:'#4fffb0',label:'Process P (client)'},
+      {color:'#ffc947',label:'Time Server S (UTC)'},
+      {color:'#7c83ff',label:'Request message'},
+      {color:'#ff6b6b',label:'Reply with time t'},
+    ],
+    steps:[
+      {desc:'Process P wants to sync its clock. It sends a time request to UTC time server S at local time T₀.',
+       nodes:[{x:.2,y:.5,label:'Process P\nT₀ = 0ms',color:'#4fffb0'},{x:.78,y:.5,label:'Time Server S\n(UTC source)',color:'#ffc947'}],
+       arrows:[{x1:.2,y1:.5,x2:.78,y2:.5,label:'REQUEST\nT₀=0ms',color:'#7c83ff'}],note:'Step 1: Send request, record T₀'},
+      {desc:'The request travels through the network. There is inherent one-way latency (at least "min" milliseconds).',
+       nodes:[{x:.2,y:.5,label:'Process P\nWaiting...',color:'#4fffb0'},{x:.78,y:.5,label:'Time Server S',color:'#ffc947'}],
+       arrows:[{x1:.2,y1:.5,x2:.78,y2:.5,label:'in transit\n(latency ≥ min)',color:'#7c83ff'}],note:'Network delay is unknown and variable'},
+      {desc:'Server S receives the request, reads its UTC clock (value t), and sends back the reply.',
+       nodes:[{x:.2,y:.5,label:'Process P\nWaiting...',color:'#4fffb0'},{x:.78,y:.5,label:'S replies\ntime = t',color:'#ffc947'}],
+       arrows:[{x1:.78,y1:.5,x2:.2,y2:.5,label:'REPLY t\n(+ interrupt I)',color:'#ff6b6b'}],note:'Step 2: Server sends time t'},
+      {desc:'P receives the reply at local time T₁. Round-trip time RTT = T₁ − T₀.',
+       nodes:[{x:.2,y:.5,label:'Process P\nT₁ = RTT',color:'#4fffb0'},{x:.78,y:.5,label:'Time Server S',color:'#ffc947'}],
+       arrows:[],note:'RTT measured. True time lies in [t + min₂, t + RTT − min₁]'},
+      {desc:"P sets its clock to t + RTT/2. This estimates that half the round-trip has elapsed since S read its clock.",
+       nodes:[{x:.2,y:.5,label:'Process P\nC(P) = t + RTT/2',color:'#4fffb0'},{x:.78,y:.5,label:'Time Server S',color:'#ffc947'}],
+       arrows:[],note:'✔ Error bounded by ±(RTT/2 − min)'},
+    ]
+  }),
+
+  // 2 - Berkeley Algorithm
+  () => ({
+    title:'Berkeley Algorithm',
+    concepts:[
+      {title:'Internal Synchronization',pageRef:'Slides 24–26',text:'No UTC needed. The master polls all slaves, averages the times, and sends adjustment deltas.'},
+      {title:'Why Send Delta?',pageRef:'Slide 24',text:'Sending the absolute corrected time would add more error due to message delay. Sending the adjustment amount is more accurate.'},
+      {title:'Fault Tolerance',pageRef:'Slide 24',text:'Outlier clocks are excluded. If the master fails, election of a new master occurs (though not in bounded time).'},
+    ],
+    legend:[
+      {color:'#ffc947',label:'Time Daemon (Master)'},
+      {color:'#4fffb0',label:'Slave machines'},
+      {color:'#ff6b6b',label:'Adjustment messages'},
+    ],
+    steps:[
+      {desc:'The time daemon (master) polls all slave machines requesting their current clock values.',
+       nodes:[
+         {x:.5,y:.28,label:'MASTER\n3:00',color:'#ffc947',shape:'rect'},
+         {x:.2,y:.68,label:'Slave 1\n2:50',color:'#4fffb0'},
+         {x:.5,y:.75,label:'Slave 2\n3:00',color:'#4fffb0'},
+         {x:.8,y:.68,label:'Slave 3\n3:25',color:'#4fffb0'},
+       ],
+       arrows:[
+         {x1:.5,y1:.28,x2:.2,y2:.68,label:'poll',color:'#ffc947'},
+         {x1:.5,y1:.28,x2:.5,y2:.75,label:'poll',color:'#ffc947'},
+         {x1:.5,y1:.28,x2:.8,y2:.68,label:'poll',color:'#ffc947'},
+       ],note:'Step (a): Master asks all machines for their clock values'},
+      {desc:'All slaves respond with their current local clock values. Master receives: 2:50, 3:00, 3:25 (plus its own 3:00).',
+       nodes:[
+         {x:.5,y:.28,label:'MASTER\ngot: 2:50\n3:00, 3:25',color:'#ffc947',shape:'rect'},
+         {x:.2,y:.68,label:'Slave 1\n2:50',color:'#4fffb0'},
+         {x:.5,y:.75,label:'Slave 2\n3:00',color:'#4fffb0'},
+         {x:.8,y:.68,label:'Slave 3\n3:25',color:'#4fffb0'},
+       ],
+       arrows:[
+         {x1:.2,y1:.68,x2:.5,y2:.28,label:'-10 min',color:'#7c83ff'},
+         {x1:.5,y1:.75,x2:.5,y2:.28,label:'0 min',color:'#7c83ff'},
+         {x1:.8,y1:.68,x2:.5,y2:.28,label:'+25 min',color:'#7c83ff'},
+       ],note:'Step (b): Slaves reply with their times'},
+      {desc:'Master computes the average: (2:50 + 3:00 + 3:00 + 3:25) / 4 ≈ 3:03:45. Target ≈ 3:05. Adjustments computed.',
+       nodes:[
+         {x:.5,y:.28,label:'MASTER\nAvg ≈ 3:05\ncomputing...',color:'#ffc947',shape:'rect'},
+         {x:.2,y:.68,label:'Slave 1\n2:50',color:'#4fffb0'},
+         {x:.5,y:.75,label:'Slave 2\n3:00',color:'#4fffb0'},
+         {x:.8,y:.68,label:'Slave 3\n3:25',color:'#4fffb0'},
+       ],arrows:[],note:'Average computed. Now master sends adjustment deltas.'},
+      {desc:'Master sends each slave the amount to ADD to their clock (positive or negative). Each slave adjusts independently.',
+       nodes:[
+         {x:.5,y:.28,label:'MASTER\n3:05',color:'#ffc947',shape:'rect'},
+         {x:.2,y:.68,label:'Slave 1\n→ 3:05\n+15 min',color:'#4fffb0'},
+         {x:.5,y:.75,label:'Slave 2\n→ 3:05\n+5 min',color:'#4fffb0'},
+         {x:.8,y:.68,label:'Slave 3\n→ 3:05\n−20 min',color:'#4fffb0'},
+       ],
+       arrows:[
+         {x1:.5,y1:.28,x2:.2,y2:.68,label:'+15',color:'#ff6b6b'},
+         {x1:.5,y1:.28,x2:.5,y2:.75,label:'+5',color:'#ff6b6b'},
+         {x1:.5,y1:.28,x2:.8,y2:.68,label:'−20',color:'#ff6b6b'},
+       ],note:'Step (c): All clocks now agree at ≈ 3:05 ✔'},
+    ]
+  }),
+
+  // 3 - Lamport Clocks
+  () => ({
+    title:"Lamport's Logical Clocks",
+    concepts:[
+      {title:'Happens-Before (→)',pageRef:'Slides 30–32',text:'If a→b: either same process with a before b, or send(m)→receive(m). Transitivity applies.'},
+      {title:'Lamport Rules',pageRef:'Slide 36',text:'① Increment before event. ② Piggyback counter on send. ③ On receive: Lⱼ = max(Lⱼ, t) + 1.'},
+      {title:'Limitation',pageRef:'Slide 27',text:'L(e) < L(e′) does NOT imply e→e′. Concurrent events can have any timestamp ordering.'},
+    ],
+    legend:[
+      {color:'#4fffb0',label:'Process P1'},
+      {color:'#ff6b6b',label:'Process P2'},
+      {color:'#7c83ff',label:'Process P3'},
+      {color:'#ffc947',label:'Message (carries timestamp)'},
+    ],
+    steps:[
+      {desc:'Initial state. Three processes P1, P2, P3 each with logical clock L = 0.',
+       nodes:[
+         {x:.2,y:.3,label:'P1\nL=0',color:'#4fffb0'},
+         {x:.5,y:.3,label:'P2\nL=0',color:'#ff6b6b'},
+         {x:.8,y:.3,label:'P3\nL=0',color:'#7c83ff'},
+       ],arrows:[],note:'All logical clocks start at 0'},
+      {desc:'Event a occurs at P1 → L1 increments to 1. Event e occurs at P3 → L3 increments to 1.',
+       nodes:[
+         {x:.2,y:.3,label:'P1\nL=1\nevent a',color:'#4fffb0'},
+         {x:.5,y:.3,label:'P2\nL=0',color:'#ff6b6b'},
+         {x:.8,y:.3,label:'P3\nL=1\nevent e',color:'#7c83ff'},
+       ],arrows:[],note:'Rule ①: increment before each local event'},
+      {desc:'Event b occurs at P1 (L1=2). P1 sends message m₁ to P2, piggybacking its timestamp t=2.',
+       nodes:[
+         {x:.2,y:.3,label:'P1\nL=2\nevent b',color:'#4fffb0'},
+         {x:.5,y:.3,label:'P2\nL=0',color:'#ff6b6b'},
+         {x:.8,y:.3,label:'P3\nL=1',color:'#7c83ff'},
+       ],arrows:[{x1:.2,y1:.3,x2:.5,y2:.3,label:'m₁ (t=2)',color:'#ffc947'}],note:'Rule ②: piggyback Lamport timestamp on send'},
+      {desc:'P2 receives m₁ with timestamp t=2. P2 applies: L2 = max(0, 2) + 1 = 3. Event c timestamped as 3.',
+       nodes:[
+         {x:.2,y:.3,label:'P1\nL=2',color:'#4fffb0'},
+         {x:.5,y:.3,label:'P2\nL=3\nevent c',color:'#ff6b6b'},
+         {x:.8,y:.3,label:'P3\nL=1',color:'#7c83ff'},
+       ],arrows:[],note:'Rule ③: Lⱼ = max(Lⱼ, t) + 1'},
+      {desc:'Event d occurs at P2 (L2=4). P2 sends m₂ to P3 with timestamp t=4.',
+       nodes:[
+         {x:.2,y:.3,label:'P1\nL=2',color:'#4fffb0'},
+         {x:.5,y:.3,label:'P2\nL=4\nevent d',color:'#ff6b6b'},
+         {x:.8,y:.3,label:'P3\nL=1',color:'#7c83ff'},
+       ],arrows:[{x1:.5,y1:.3,x2:.8,y2:.3,label:'m₂ (t=4)',color:'#ffc947'}],note:'P2 sends with its current timestamp'},
+      {desc:'P3 receives m₂ with t=4. L3 = max(1, 4) + 1 = 5. Event f timestamped as 5. Chain: a(1)→b(2)→c(3)→d(4)→f(5).',
+       nodes:[
+         {x:.2,y:.3,label:'P1\nL=2',color:'#4fffb0'},
+         {x:.5,y:.3,label:'P2\nL=4',color:'#ff6b6b'},
+         {x:.8,y:.3,label:'P3\nL=5\nevent f',color:'#7c83ff'},
+       ],arrows:[],note:'✔ a→b→c→d→f correctly ordered. e∥a (concurrent)'},
+    ]
+  }),
+
+  // 4 - Vector Clocks
+  () => ({
+    title:'Vector Clocks',
+    concepts:[
+      {title:'Vector Clock Rules',pageRef:'Slide 40',text:'Each process holds a vector of N counters. Vᵢ[i]++ before each event. Piggyback vector on send. On receive: Vᵢ[j] = max(Vᵢ[j], t[j]) for all j.'},
+      {title:'Causal Detection',pageRef:'Slide 40',text:'e→e′ ⟺ V(e) < V(e′). Concurrent: neither V(e)<V(e′) nor V(e′)<V(e).'},
+      {title:'Advantage over Lamport',pageRef:'Slide 40',text:'Vector clocks detect concurrency. Lamport clocks cannot — two concurrent events may have ordered timestamps.'},
+    ],
+    legend:[
+      {color:'#4fffb0',label:'Process P1 (index 0)'},
+      {color:'#ff6b6b',label:'Process P2 (index 1)'},
+      {color:'#7c83ff',label:'Process P3 (index 2)'},
+      {color:'#ffc947',label:'Message with vector timestamp'},
+    ],
+    steps:[
+      {desc:'Initial state. Three processes. Each holds vector clock [0,0,0].',
+       nodes:[
+         {x:.2,y:.4,label:'P1\n[0,0,0]',color:'#4fffb0'},
+         {x:.5,y:.4,label:'P2\n[0,0,0]',color:'#ff6b6b'},
+         {x:.8,y:.4,label:'P3\n[0,0,0]',color:'#7c83ff'},
+       ],arrows:[],note:'Vector clocks: one slot per process'},
+      {desc:'Event a at P1: V1[0]++ → V1=[1,0,0]. Event e at P3: V3[2]++ → V3=[0,0,1]. These are CONCURRENT.',
+       nodes:[
+         {x:.2,y:.4,label:'P1\n[1,0,0]\nevent a',color:'#4fffb0'},
+         {x:.5,y:.4,label:'P2\n[0,0,0]',color:'#ff6b6b'},
+         {x:.8,y:.4,label:'P3\n[0,0,1]\nevent e',color:'#7c83ff'},
+       ],arrows:[],note:'a ∥ e (concurrent — neither caused the other)'},
+      {desc:'Event b at P1: V1[0]++ → V1=[2,0,0]. P1 sends m₁ to P2 with vector [2,0,0].',
+       nodes:[
+         {x:.2,y:.4,label:'P1\n[2,0,0]\nevent b',color:'#4fffb0'},
+         {x:.5,y:.4,label:'P2\n[0,0,0]',color:'#ff6b6b'},
+         {x:.8,y:.4,label:'P3\n[0,0,1]',color:'#7c83ff'},
+       ],arrows:[{x1:.2,y1:.4,x2:.5,y2:.4,label:'m₁\n[2,0,0]',color:'#ffc947'}],note:'P1 sends its full vector with the message'},
+      {desc:'P2 receives m₁. Merge: V2 = max([0,0,0],[2,0,0]) = [2,0,0]. Then V2[1]++ → [2,1,0]. Event c at P2.',
+       nodes:[
+         {x:.2,y:.4,label:'P1\n[2,0,0]',color:'#4fffb0'},
+         {x:.5,y:.4,label:'P2\n[2,1,0]\nevent c',color:'#ff6b6b'},
+         {x:.8,y:.4,label:'P3\n[0,0,1]',color:'#7c83ff'},
+       ],arrows:[],note:'P2 knows it has seen 2 events from P1'},
+      {desc:'Event d at P2: V2[1]++ → [2,2,0]. P2 sends m₂ to P3 with vector [2,2,0].',
+       nodes:[
+         {x:.2,y:.4,label:'P1\n[2,0,0]',color:'#4fffb0'},
+         {x:.5,y:.4,label:'P2\n[2,2,0]\nevent d',color:'#ff6b6b'},
+         {x:.8,y:.4,label:'P3\n[0,0,1]',color:'#7c83ff'},
+       ],arrows:[{x1:.5,y1:.4,x2:.8,y2:.4,label:'m₂\n[2,2,0]',color:'#ffc947'}],note:'Vector carries full causal history'},
+      {desc:'P3 receives m₂. Merge: max([0,0,1],[2,2,0])=[2,2,1]. Then V3[2]++ → [2,2,2]. Event f at P3.',
+       nodes:[
+         {x:.2,y:.4,label:'P1\n[2,0,0]',color:'#4fffb0'},
+         {x:.5,y:.4,label:'P2\n[2,2,0]',color:'#ff6b6b'},
+         {x:.8,y:.4,label:'P3\n[2,2,2]\nevent f',color:'#7c83ff'},
+       ],arrows:[],note:'✔ b→f: [2,0,0] < [2,2,2]. e∥b: [0,0,1] vs [2,0,0] — neither dominates'},
+    ]
+  }),
+
+];
+
+// ─── DRAWING ─────────────────────────────────
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  if(!currentStep) return;
+
+  // background grid
+  ctx.strokeStyle='#111320';
+  ctx.lineWidth=1;
+  for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  // title
+  ctx.fillStyle='#1a1d30';
+  ctx.font="bold 11px 'IBM Plex Mono',monospace";
+  ctx.textAlign='left';
+  ctx.fillText(currentSim.title.toUpperCase(), 16, 22);
+
+  // arrows first
+  (currentStep.arrows||[]).forEach(a=>{
+    drawArrow(a.x1*W,a.y1*H,a.x2*W,a.y2*H,a.label,a.color);
+  });
+
+  // nodes
+  (currentStep.nodes||[]).forEach(n=>{
+    drawNode({...n,x:n.x*W,y:n.y*H});
+  });
+
+  // note
+  if(currentStep.note){
+    const pad=12, th=28;
+    ctx.fillStyle='rgba(7,8,15,0.85)';
+    ctx.fillRect(0, H-th-pad, W, th+pad);
+    ctx.fillStyle='#ffc947';
+    ctx.font="bold 12px 'IBM Plex Mono',monospace";
+    ctx.textAlign='center';
+    ctx.fillText(currentStep.note, W/2, H-pad/2-2);
+  }
+
+  if(currentStep.pageRef){
+    ctx.fillStyle='#2a2f50';
+    ctx.font="10px 'IBM Plex Mono',monospace";
+    ctx.textAlign='right';
+    ctx.fillText('ref: '+currentStep.pageRef, W-14, 22);
+  }
+}
+
+function drawNode(n){
+  const R=32;
+  ctx.shadowColor=n.color; ctx.shadowBlur=18;
+  if(n.shape==='rect'){
+    ctx.beginPath();
+    ctx.roundRect(n.x-R,n.y-R,R*2,R*2,6);
+  } else {
+    ctx.beginPath(); ctx.arc(n.x,n.y,R,0,Math.PI*2);
+  }
+  ctx.fillStyle=n.color+'22'; ctx.fill();
+  ctx.strokeStyle=n.color; ctx.lineWidth=2.5; ctx.stroke();
+  ctx.shadowBlur=0;
+
+  ctx.fillStyle=n.color;
+  ctx.font="bold 10px 'IBM Plex Mono',monospace";
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  const lines=(n.label||'').split('\n');
+  const lh=13;
+  lines.forEach((l,i)=>{
+    ctx.fillText(l, n.x, n.y+(i-(lines.length-1)/2)*lh);
+  });
+}
+
+function drawArrow(x1,y1,x2,y2,label,color){
+  const R=34;
+  const dx=x2-x1, dy=y2-y1, dist=Math.sqrt(dx*dx+dy*dy);
+  if(dist<1) return;
+  const ux=dx/dist, uy=dy/dist;
+  const sx=x1+ux*R, sy=y1+uy*R;
+  const ex=x2-ux*R, ey=y2-uy*R;
+  const mx=(sx+ex)/2-uy*22, my=(sy+ey)/2+ux*22;
+  ctx.beginPath(); ctx.moveTo(sx,sy); ctx.quadraticCurveTo(mx,my,ex,ey);
+  ctx.strokeStyle=color; ctx.lineWidth=2;
+  ctx.shadowColor=color; ctx.shadowBlur=8; ctx.stroke(); ctx.shadowBlur=0;
+  const ang=Math.atan2(ey-my,ex-mx);
+  ctx.save(); ctx.translate(ex,ey); ctx.rotate(ang);
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(-10,-4); ctx.lineTo(-10,4); ctx.closePath();
+  ctx.fillStyle=color; ctx.fill(); ctx.restore();
+  if(label){
+    const lx=(sx+ex)/2-uy*32, ly=(sy+ey)/2+ux*32;
+    const lines=label.split('\n');
+    const lh=15;
+    ctx.fillStyle='rgba(7,8,15,0.9)';
+    ctx.fillRect(lx-38,ly-8-lh*(lines.length-1)/2,76,lh*lines.length+4);
+    ctx.fillStyle=color;
+    ctx.font="bold 9px 'IBM Plex Mono',monospace";
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    lines.forEach((l,i)=>ctx.fillText(l, lx, ly-(lines.length-1)*lh/2+i*lh));
+  }
+}
+
+// ─── STEP CONTROL ────────────────────────────
+function goStep(idx){
+  if(!currentSim) return;
+  const steps=currentSim.steps;
+  if(idx<0||idx>=steps.length) return;
+  stepIdx=idx;
+  currentStep=steps[idx];
+  draw(); updateLog(); updateUI();
+}
+function nextStep(){if(stepIdx<currentSim.steps.length-1) goStep(stepIdx+1); else stopPlay();}
+function prevStep(){goStep(stepIdx-1);}
+function resetSim(){stopPlay();goStep(0);}
+function togglePlay(){if(playing) stopPlay(); else startPlay();}
+function startPlay(){
+  playing=true;
+  document.getElementById('playBtn').textContent='⏸ PAUSE';
+  playTimer=setInterval(()=>{
+    if(stepIdx>=currentSim.steps.length-1){stopPlay();return;}
+    nextStep();
+  },speed);
+}
+function stopPlay(){
+  playing=false;
+  document.getElementById('playBtn').textContent='▶ PLAY';
+  clearInterval(playTimer);
+}
+function updateSpeed(){
+  speed=parseInt(document.getElementById('speed-slider').value);
+  if(playing){stopPlay();startPlay();}
+}
+function updateLog(){
+  const body=document.getElementById('log-body');
+  body.innerHTML=currentSim.steps.map((s,i)=>`
+    <div class="log-entry ${i===stepIdx?'active':''}">
+      <span class="sn">${String(i+1).padStart(2,'0')}</span>${s.desc}
+    </div>`).join('');
+  const a=body.querySelector('.active');
+  if(a) a.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function updateUI(){
+  const n=currentSim.steps.length;
+  document.getElementById('step-info').textContent=`Step ${stepIdx+1}/${n}`;
+  document.getElementById('prog-bar').style.width=`${((stepIdx+1)/n)*100}%`;
+  document.getElementById('prevBtn').disabled=stepIdx===0;
+  document.getElementById('nextBtn').disabled=stepIdx===n-1;
+}
+function updateSidebar(){
+  const body=document.getElementById('sidebar-body');
+  body.innerHTML=(currentSim.concepts||[]).map(c=>`
+    <div class="side-card">
+      <div class="page-ref">📄 ${c.pageRef}</div>
+      <h3>${c.title}</h3>
+      <p>${c.text}</p>
+    </div>`).join('');
+  const leg=document.getElementById('legend-section');
+  leg.innerHTML=`<div class="legend-title">LEGEND</div>`+
+    (currentSim.legend||[]).map(l=>`
+      <div class="legend-item">
+        <div class="ldot" style="background:${l.color};box-shadow:0 0 5px ${l.color}88"></div>
+        ${l.label}
+      </div>`).join('');
+}
+
+// ─── TAB SWITCHING ───────────────────────────
+function showHome(){
+  stopPlay();
+  document.getElementById('home-page').classList.add('visible');
+  document.getElementById('canvas-page').classList.remove('visible');
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+}
+function showSim(idx){
+  stopPlay();
+  document.getElementById('home-page').classList.remove('visible');
+  document.getElementById('canvas-page').classList.add('visible');
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===idx+1));
+  currentSim=SIMS[idx]();
+  stepIdx=0; currentStep=currentSim.steps[0];
+  updateSidebar(); updateLog(); updateUI();
+  resizeCanvas();
+}
+
+window.addEventListener('load',()=>{ resizeCanvas(); });
+</script>
+</body>
+</html>
