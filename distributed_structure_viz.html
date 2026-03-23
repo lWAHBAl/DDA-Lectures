@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Distributed Systems – Structure & Consistency</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Fraunces:ital,wght@0,300;0,700;0,900;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#07080f; --panel:#0d0f1a; --panel2:#111320;
+  --border:#1a1d30; --border2:#222640;
+  --accent:#4fffb0; --accent2:#ff6b6b; --accent3:#ffc947; --accent4:#7c83ff;
+  --text:#dde0f0; --muted:#5a5f80; --muted2:#3a3f60;
+  --r: 6px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Fraunces',serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;height:100vh;}
+
+/* ── TOP BAR ── */
+.topbar{display:flex;align-items:center;gap:1rem;padding:.7rem 1.5rem;border-bottom:1px solid var(--border);background:var(--panel);flex-shrink:0;}
+.topbar .badge{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.12em;background:var(--accent4);color:#000;padding:.2rem .55rem;border-radius:2px;}
+.topbar h1{font-size:1rem;font-weight:700;letter-spacing:-.01em;}
+.topbar h1 span{color:var(--accent);}
+
+/* ── NAV TABS ── */
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--panel);flex-shrink:0;overflow-x:auto;}
+.tab-btn{font-family:'IBM Plex Mono',monospace;font-size:.65rem;letter-spacing:.06em;padding:.75rem 1.3rem;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;transition:all .2s;white-space:nowrap;}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-btn.home-tab{color:var(--accent3);border-bottom-color:transparent;}
+.tab-btn.home-tab.active{border-bottom-color:var(--accent3);}
+
+/* ── MAIN LAYOUT ── */
+.workspace{display:flex;flex:1;overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:260px;min-width:260px;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;background:var(--panel);}
+.sidebar-header{padding:1rem;border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;}
+.sidebar-body{flex:1;overflow-y:auto;padding:.75rem;}
+.side-card{background:var(--panel2);border:1px solid var(--border);border-radius:var(--r);padding:.85rem 1rem;margin-bottom:.6rem;cursor:pointer;transition:all .2s;position:relative;}
+.side-card:hover,.side-card.active{border-color:var(--accent);background:#0d1520;}
+.side-card.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);border-radius:3px 0 0 3px;}
+.side-card h3{font-size:.82rem;font-weight:700;margin-bottom:.25rem;}
+.side-card .page-ref{font-family:'IBM Plex Mono',monospace;font-size:.58rem;color:var(--accent3);margin-bottom:.35rem;}
+.side-card p{font-size:.7rem;color:var(--muted);line-height:1.5;}
+.legend-section{padding:.75rem 1rem;border-top:1px solid var(--border);}
+.legend-title{font-family:'IBM Plex Mono',monospace;font-size:.58rem;letter-spacing:.1em;color:var(--muted);margin-bottom:.5rem;}
+.legend-item{display:flex;align-items:center;gap:.5rem;font-size:.68rem;color:var(--muted);margin-bottom:.35rem;}
+.ldot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+/* ── CANVAS AREA ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.canvas-wrap{flex:1;position:relative;overflow:hidden;}
+canvas{position:absolute;top:0;left:0;}
+
+/* ── LOG ── */
+.log-wrap{height:148px;border-top:1px solid var(--border);background:#08090f;display:flex;flex-direction:column;flex-shrink:0;}
+.log-header{font-family:'IBM Plex Mono',monospace;font-size:.58rem;letter-spacing:.1em;color:var(--muted);padding:.6rem 1rem .3rem;flex-shrink:0;}
+.log-body{flex:1;overflow-y:auto;padding:0 1rem .5rem;}
+.log-entry{font-size:.78rem;line-height:1.6;padding:.18rem 0 .18rem .7rem;border-left:2px solid transparent;color:var(--muted);font-family:'Fraunces',serif;}
+.log-entry.active{color:var(--text);border-color:var(--accent);}
+.log-entry .sn{font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:var(--accent);margin-right:.4rem;}
+
+/* ── CONTROLS ── */
+.controls{display:flex;align-items:center;gap:.7rem;padding:.7rem 1rem;border-top:1px solid var(--border);background:var(--panel);flex-shrink:0;}
+.btn{font-family:'IBM Plex Mono',monospace;font-size:.65rem;letter-spacing:.05em;padding:.45rem 1rem;border:1px solid var(--border2);background:none;color:var(--text);cursor:pointer;border-radius:3px;transition:all .2s;}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn.primary{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600;}
+.btn.primary:hover{background:#36e89a;}
+.btn:disabled{opacity:.3;cursor:not-allowed;}
+.step-info{font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:var(--muted);margin-left:auto;}
+.speed-label{font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:var(--muted);}
+input[type=range]{accent-color:var(--accent);width:70px;}
+.prog-wrap{height:2px;background:var(--border);flex-shrink:0;}
+.prog-bar{height:100%;background:var(--accent);transition:width .25s;}
+
+/* ── HOME PAGE ── */
+#home-page{display:none;flex:1;overflow-y:auto;padding:2rem 2.5rem;}
+#home-page.visible{display:block;}
+.home-title{font-size:2rem;font-weight:900;letter-spacing:-.03em;margin-bottom:.3rem;}
+.home-title span{color:var(--accent);}
+.home-subtitle{font-size:.85rem;color:var(--muted);font-style:italic;margin-bottom:2rem;}
+.home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.2rem;margin-bottom:2rem;}
+.home-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:1.4rem;transition:border-color .2s;}
+.home-card:hover{border-color:var(--border2);}
+.home-card .hc-tag{font-family:'IBM Plex Mono',monospace;font-size:.58rem;letter-spacing:.1em;color:var(--accent4);margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem;}
+.home-card .hc-tag .pg{background:var(--panel2);border:1px solid var(--border2);padding:.15rem .45rem;border-radius:2px;color:var(--accent3);}
+.home-card h2{font-size:1rem;font-weight:700;margin-bottom:.6rem;}
+.home-card p{font-size:.78rem;color:var(--muted);line-height:1.7;}
+.home-card ul{margin:.5rem 0 0 1rem;}
+.home-card ul li{font-size:.76rem;color:var(--muted);line-height:1.7;}
+.home-card ul li strong{color:var(--text);}
+.home-divider{font-family:'IBM Plex Mono',monospace;font-size:.65rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;padding:.5rem 0;border-bottom:1px solid var(--border);margin:1.5rem 0 1rem;}
+
+/* ── CANVAS-BASED VIEW ── */
+#canvas-page{display:none;flex:1;flex-direction:column;overflow:hidden;}
+#canvas-page.visible{display:flex;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="badge">LECTURE 2</div>
+  <h1>Distributed Systems — <span>Structure & Consistency</span></h1>
+</div>
+
+<div class="tabs" id="tabs">
+  <button class="tab-btn home-tab active" onclick="showHome()">🏠 OVERVIEW</button>
+  <button class="tab-btn" onclick="showSim(0)">01 · Architecture</button>
+  <button class="tab-btn" onclick="showSim(1)">02 · Clock Sync</button>
+  <button class="tab-btn" onclick="showSim(2)">03 · Lamport Clocks</button>
+  <button class="tab-btn" onclick="showSim(3)">04 · Vector Clocks</button>
+  <button class="tab-btn" onclick="showSim(4)">05 · Replication</button>
+  <button class="tab-btn" onclick="showSim(5)">06 · Consistency Models</button>
+</div>
+
+<!-- HOME PAGE -->
+<div id="home-page" class="visible">
+  <div class="home-title">Distributed <span>Systems</span></div>
+  <div class="home-subtitle">Lecture 2 — Complete Summary: Architecture · Time · Replication · Consistency</div>
+
+  <div class="home-divider">Part 1 — Foundations of Distributed Systems</div>
+  <div class="home-grid">
+
+    <div class="home-card">
+      <div class="hc-tag">DEFINITION <span class="pg">pp. 2–5</span></div>
+      <h2>What Is a Distributed System?</h2>
+      <p>A distributed system is a collection of independent computers that <strong>appears to its users as a single coherent system</strong>. Processes communicate <em>only by message passing</em> — there is no shared memory. Key characteristics:</p>
+      <ul>
+        <li><strong>Concurrency:</strong> programs run on different machines simultaneously</li>
+        <li><strong>Independent failures:</strong> components can fail without taking down the whole system</li>
+        <li><strong>No global clock:</strong> each machine has its own clock — they can drift apart</li>
+        <li>Lamport's definition: "You know you have a distributed system when the crash of a computer you've never heard of stops you from getting any work done."</li>
+      </ul>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">PROPERTIES <span class="pg">pp. 7–12</span></div>
+      <h2>Core Properties</h2>
+      <p>Three fundamental goals every distributed system aims for:</p>
+      <ul>
+        <li><strong>Transparency:</strong> Hide the physical distribution from users. Types include access, location, migration, replication, concurrency, failure, and persistence transparency.</li>
+        <li><strong>Scalability:</strong> The system must remain effective as users and resources grow. Challenges: avoiding bottlenecks, controlling costs, preventing resource exhaustion.</li>
+        <li><strong>Openness / Flexibility:</strong> Well-defined interfaces allow components from different developers to work together.</li>
+      </ul>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">SOFTWARE LAYERS <span class="pg">pp. 13–18</span></div>
+      <h2>System Software Concepts</h2>
+      <p>Three types of distributed system software sit between applications and hardware:</p>
+      <ul>
+        <li><strong>DOS (Distributed OS):</strong> Tightly-coupled OS for multi-processors. Tries to maintain a global view of all resources.</li>
+        <li><strong>NOS (Network OS):</strong> Loosely-coupled. Each machine has its own OS with local services (e.g. Sun's NFS). Machines have a high degree of autonomy.</li>
+        <li><strong>Middleware:</strong> An additional software layer on top of NOS that masks heterogeneity (different languages, hardware, networks). Provides distribution transparency. Examples: CORBA, Java RMI.</li>
+      </ul>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">ARCHITECTURE <span class="pg">pp. 21–27</span></div>
+      <h2>Architectural Styles</h2>
+      <p>Two dominant models for organizing roles in a distributed system:</p>
+      <ul>
+        <li><strong>Client–Server:</strong> Server provides a service and waits for requests. Client invokes service and blocks until reply. Advantage: efficient division of labor, easy synchronization. Problem: server is a bottleneck and single point of failure.</li>
+        <li><strong>Peer-to-Peer (P2P):</strong> All processes are equal — each acts as both client and server. Subdivided into: <em>structured</em> P2P (organized data structure), <em>unstructured</em> P2P (random neighbors), and <em>hybrid</em> P2P (some special nodes). Much better scalability.</li>
+        <li><strong>Proxy/Cache servers:</strong> A shared cache of recently used objects, placed close to clients. Reduces load on origin servers. A form of partial replication.</li>
+      </ul>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">COMMUNICATION <span class="pg">pp. 29–32</span></div>
+      <h2>Message Passing</h2>
+      <p>All communication in distributed systems is fundamentally based on low-level message passing — there is no shared memory between machines. Two operations: <strong>send</strong> and <strong>receive</strong>.</p>
+      <ul>
+        <li><strong>Synchronous:</strong> Both send AND receive are blocking. Sender waits until receiver receives. Tight coupling.</li>
+        <li><strong>Asynchronous:</strong> Send is non-blocking — sender continues immediately while message is transmitted. Receive is usually blocking (to keep synchronization simple). Modern systems favor this with multi-threading so only one thread blocks.</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="home-divider">Part 2 — Time & Clock Synchronization</div>
+  <div class="home-grid">
+
+    <div class="home-card">
+      <div class="hc-tag">WHY IT MATTERS <span class="pg">pp. 34–43</span></div>
+      <h2>The Problem of Time in DS</h2>
+      <p>Physical clocks on different machines <strong>drift apart</strong> over time due to oscillator imperfections. This creates real problems:</p>
+      <ul>
+        <li>Two servers log the same event with different timestamps — which came first?</li>
+        <li>UNIX <code>make</code> bug: a client clock lagging behind the server causes the build system to think files are already up-to-date when they aren't.</li>
+        <li>The <strong>clock drift rate</strong> for quartz crystals is ~10⁻⁶ seconds/second. Modern timer chips can drift ~0.86 seconds per day.</li>
+        <li>Key insight: It is impossible to guarantee physical clocks run at the same frequency, so we need algorithms to either synchronize them or work around the problem.</li>
+      </ul>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">PHYSICAL CLOCKS <span class="pg">pp. 45–52</span></div>
+      <h2>Physical Time Standards</h2>
+      <ul>
+        <li><strong>TAI (International Atomic Time):</strong> Based on counting transitions of cesium-133 atoms. 9,192,631,770 transitions = 1 second. Extremely stable.</li>
+        <li><strong>UTC (Universal Coordinated Time):</strong> TAI adjusted with leap seconds to stay in phase with solar time. Broadcast by satellites and radio signals.</li>
+        <li><strong>Clock Skew:</strong> The difference in readings between two clocks at any given moment.</li>
+        <li><strong>Clock Drift:</strong> Different rates of counting — clocks run at slightly different speeds. Small differences accumulate into large observable skew.</li>
+      </ul>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">ALGORITHM <span class="pg">pp. 53–59</span></div>
+      <h2>Cristian's Algorithm (External Sync)</h2>
+      <p>A process P periodically contacts a time server S that has access to UTC:</p>
+      <ul>
+        <li>P sends a request to S at time T₁</li>
+        <li>S replies with its current time C(S) at time T₂</li>
+        <li>P receives reply at time T₃</li>
+        <li>P estimates: <strong>C(P) = C(S) + (T₃ − T₁)/2</strong> (adds half round-trip time)</li>
+        <li>Accuracy = Tround/2 − min (where min = minimum one-way delay)</li>
+        <li>Limitations: single point of failure, variability in network delays. Solution: take minimum of several requests.</li>
+      </ul>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">ALGORITHM <span class="pg">pp. 55–57</span></div>
+      <h2>NTP — Network Time Protocol</h2>
+      <p>A hierarchical tree of time servers synchronizes all machines on the internet:</p>
+      <ul>
+        <li><strong>Stratum 1:</strong> Primary servers directly connected to UTC source</li>
+        <li><strong>Stratum 2:</strong> Synchronized from Stratum 1</li>
+        <li><strong>Stratum 3:</strong> Synchronized from Stratum 2, and so on</li>
+        <li>NTP runs multiple trials and selects the trial with the minimum round-trip delay to get the best estimate</li>
+        <li>Offset θ = (a+b)/2, Delay δ = a−b, where a = T1−T3, b = T2−T4</li>
+      </ul>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">ALGORITHM <span class="pg">pp. 60–61</span></div>
+      <h2>Berkeley Algorithm (Internal Sync)</h2>
+      <p>Used when no UTC source is available — focuses on keeping all clocks <em>consistent with each other</em> rather than accurate to real time:</p>
+      <ul>
+        <li>An elected master (time daemon) polls all other machines for their current clock values</li>
+        <li>The daemon adjusts the received times to account for round-trip latency</li>
+        <li>The daemon computes the average of all times</li>
+        <li>Each machine is told how much to adjust its clock (not what time it is)</li>
+        <li>Clocks never go backwards — if a clock is ahead, the daemon slows it down instead of jumping it back</li>
+        <li>Average time is more accurate than any single clock, though it still drifts from UTC</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="home-divider">Part 3 — Logical Clocks & Event Ordering</div>
+  <div class="home-grid">
+
+    <div class="home-card">
+      <div class="hc-tag">CONCEPT <span class="pg">pp. 62–66</span></div>
+      <h2>Happens-Before Relation (→)</h2>
+      <p>Lamport observed that for many DS algorithms, we don't need to know the absolute real time of events — we just need to know their <strong>relative ordering</strong>. The "happens-before" relation (→) captures causal ordering:</p>
+      <ul>
+        <li><strong>Rule 1:</strong> On the same process: a→b if a occurred before b</li>
+        <li><strong>Rule 2:</strong> If process P sends message m, and Q receives m: send(m) → receive(m)</li>
+        <li><strong>Rule 3 (transitivity):</strong> If a→b and b→c, then a→c</li>
+        <li>If neither a→b nor b→a, events are <strong>concurrent</strong> — they cannot causally affect each other</li>
+      </ul>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">ALGORITHM <span class="pg">pp. 66–69</span></div>
+      <h2>Lamport Timestamps</h2>
+      <p>Each process maintains a counter (logical clock) that provides a partial ordering of all events:</p>
+      <ul>
+        <li>Each process starts with counter = 0</li>
+        <li><strong>Rule 1:</strong> Before any event, increment the counter: L := L + 1</li>
+        <li><strong>Rule 2a:</strong> When sending a message, piggyback the current counter value t</li>
+        <li><strong>Rule 2b:</strong> On receiving message with timestamp t: L := max(L, t) + 1</li>
+        <li>Guarantee: if a→b then L(a) &lt; L(b)</li>
+        <li>Limitation: L(a) &lt; L(b) does NOT imply a→b (concurrent events can have ordered timestamps)</li>
+      </ul>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">ALGORITHM <span class="pg">pp. 70–87</span></div>
+      <h2>Vector Clocks</h2>
+      <p>Fix the limitation of Lamport clocks — vector clocks can detect concurrency. Each process maintains a <strong>vector</strong> of N counters (one per process):</p>
+      <ul>
+        <li>V[i][i] incremented before each event at process i</li>
+        <li>Messages carry the full vector as their timestamp</li>
+        <li>On receiving message with vector t: V[i][j] = max(V[i][j], t[j]) for all j, then increment V[i][i]</li>
+        <li>V[i][j] means: "the number of events at process j that causally precede what I know"</li>
+        <li>e → e' if and only if V(e) &lt; V(e') (component-wise less-than-or-equal, with at least one strict)</li>
+        <li>If neither V(e) ≤ V(e') nor V(e') ≤ V(e), the events are truly <strong>concurrent</strong></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="home-divider">Part 4 — Replication</div>
+  <div class="home-grid">
+
+    <div class="home-card">
+      <div class="hc-tag">MOTIVATION <span class="pg">pp. 93–96</span></div>
+      <h2>Why Replicate Data?</h2>
+      <p>Replication = maintaining copies of data at multiple sites. Three main reasons:</p>
+      <ul>
+        <li><strong>Performance Enhancement:</strong> Load balancing — divide work among servers. Exploit geographic proximity (closer server = faster access). Caching via proxy servers.</li>
+        <li><strong>Availability:</strong> If one replica fails, others serve requests. If each of n servers has failure probability p, availability = 1 − pⁿ (much better than a single server's 1−p).</li>
+        <li><strong>Fault Tolerance:</strong> Stronger than availability — guarantees strictly correct behavior. Example: tolerate up to f crash failures with f+1 replicas. Byzantine fault tolerance requires 2f+1 replicas.</li>
+      </ul>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">MODEL <span class="pg">pp. 99–105</span></div>
+      <h2>Replication Architecture</h2>
+      <p>How a replicated system is structured:</p>
+      <ul>
+        <li><strong>Replica Managers (RM):</strong> Each RM holds copies of the replicated objects and applies operations to them directly and recoverably</li>
+        <li><strong>Front Ends (FE):</strong> Clients interact with front ends, which provide replication transparency — the client doesn't know there are multiple copies</li>
+        <li><strong>One-Copy Serializability:</strong> The effect of transactions on replicated objects must be the same as if performed on a single copy</li>
+        <li>Five phases per request: Request → Coordination → Execution → Agreement → Response</li>
+        <li>Request ordering options: FIFO, Causal, or Total ordering</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="home-divider">Part 5 — Consistency Models</div>
+  <div class="home-grid">
+
+    <div class="home-card">
+      <div class="hc-tag">NOTATION <span class="pg">p. 108</span></div>
+      <h2>Reading the Diagrams</h2>
+      <p>Consistency model diagrams use this notation:</p>
+      <ul>
+        <li><strong>W(x)a</strong> = write value 'a' to variable x</li>
+        <li><strong>R(x)a</strong> = read value 'a' from variable x</li>
+        <li>Time progresses left to right. Each row is one process.</li>
+        <li>The subscript (W₁, R₂) indicates which process performed the operation</li>
+      </ul>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">MODEL <span class="pg">pp. 109–110</span></div>
+      <h2>Strict Consistency</h2>
+      <p>The strongest model: any read on x returns the value of the <strong>most recent write</strong> on x, globally. Requires absolute global time ordering. <strong>Impossible to implement in practice</strong> — a write on host B cannot be instantaneously visible to host A over a physical network (even light takes time to travel). If A reads x at t₁ and B writes x at t₂ = t₁ + 3ns, A must get the old value — but this requires infinitely fast communication.</p>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">MODEL <span class="pg">p. 111</span></div>
+      <h2>Linearizability</h2>
+      <p>A weaker version of strict consistency. A service is linearizable if there exists some interleaving of all operations that (1) meets the spec of a single correct copy and (2) is consistent with the <strong>real time</strong> at which each operation occurred. The real-time requirement means clients must receive up-to-date information. Practically difficult due to clock synchronization challenges.</p>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">MODEL <span class="pg">pp. 112–117</span></div>
+      <h2>Sequential Consistency</h2>
+      <p>All processes see all operations in the <strong>same order</strong>, and that order is consistent with each individual process's program order. Does NOT require real-time ordering — the global sequence just needs to be consistent with local order. Example: if P1 does x=1 then P2 does y=1, all processes must agree on the relative order these are seen — but the agreed-upon order doesn't need to match wall-clock time. All valid interleavings are acceptable as long as everyone agrees on which one occurred.</p>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">MODEL <span class="pg">pp. 118–121</span></div>
+      <h2>Causal Consistency</h2>
+      <p>Only causally related writes must be seen in the same order by all processes. <strong>Concurrent writes</strong> (writes with no causal relationship) may be seen in different orders by different processes. Example: if P1 writes x=a and P2 reads x=a and then writes x=b, then P2's write is causally related to P1's write — all processes must see W(x)a before W(x)b. But if P2's write had occurred without reading P1's value first, the two writes are concurrent and can be seen in any order.</p>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">MODEL <span class="pg">pp. 122–125</span></div>
+      <h2>FIFO Consistency</h2>
+      <p>Writes from a <strong>single process</strong> are seen by all other processes in the order they were issued. Writes from <em>different</em> processes may be seen in different orders by different processes. This is the weakest ordering guarantee without synchronization. Danger: if P1 does "x=1; if (y==0) kill(P2)" and P2 does "y=1; if (x==0) kill(P1)", under FIFO both processes could be killed because each may read the other's variable before seeing the write (unlike sequential consistency which would prevent this).</p>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">MODEL <span class="pg">pp. 126–127</span></div>
+      <h2>Weak Consistency</h2>
+      <p>Shared data can only be relied upon to be consistent <strong>after a synchronization operation</strong>. Between synchronizations, processes can see stale data. Synchronization variables are sequentially consistent. No read/write on data items is allowed until all previous synchronization operations complete. A synchronization "flushes the pipeline" — after an update, a process can force all other processes to see it by performing a synchronize operation.</p>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">MODEL <span class="pg">pp. 128–131</span></div>
+      <h2>Release Consistency</h2>
+      <p>Refinement of weak consistency — distinguishes between entering and exiting a critical section using <strong>acquire</strong> and <strong>release</strong> operations:</p>
+      <ul>
+        <li>Before reading/writing shared data: all previous acquires must have completed</li>
+        <li>Before a release: all previous reads/writes must have completed</li>
+        <li><strong>Eager implementation:</strong> After release, updates are immediately propagated to all processes</li>
+        <li><strong>Lazy implementation:</strong> Nothing sent on release; on acquire, the process fetches only the data it needs using timestamps</li>
+      </ul>
+    </div>
+
+    <div class="home-card">
+      <div class="hc-tag">MODEL <span class="pg">pp. 132–134</span></div>
+      <h2>Entry Consistency</h2>
+      <p>The most fine-grained model — each shared data item is <strong>associated with its own synchronization variable (lock)</strong>. Only data guarded by a specific lock is made consistent when that lock is acquired. This allows multiple critical sections with disjoint data to execute concurrently. On acquire: all remote changes to the guarded data are made visible. Each lock has a "current owner" who can repeatedly enter/exit without network messages unless another process competes.</p>
+    </div>
+
+  </div>
+
+  <div class="home-divider">Summary: Consistency Models Ordered by Strength</div>
+  <div class="home-grid">
+    <div class="home-card" style="grid-column:1/-1;">
+      <div class="hc-tag">FULL COMPARISON <span class="pg">p. 135</span></div>
+      <h2>Consistency Models — Weakest to Strongest</h2>
+      <p style="margin-bottom:.7rem;font-size:.78rem;color:var(--muted);">Models without synchronization operations (stricter):</p>
+      <ul>
+        <li><strong>Strict:</strong> Absolute real-time ordering of all accesses. Impossible in practice.</li>
+        <li><strong>Linearizability:</strong> All accesses ordered by global timestamp. Real-time consistent.</li>
+        <li><strong>Sequential:</strong> All processes agree on the same ordering, consistent with program order.</li>
+        <li><strong>Causal:</strong> Only causally-related writes seen in same order. Concurrent writes may differ.</li>
+        <li><strong>FIFO:</strong> Writes from same process seen in order. Writes from different processes may differ.</li>
+      </ul>
+      <p style="margin:.7rem 0;font-size:.78rem;color:var(--muted);">Models with synchronization operations (weaker, but more practical):</p>
+      <ul>
+        <li><strong>Weak:</strong> Data consistent only after explicit synchronization.</li>
+        <li><strong>Release:</strong> Data consistent when a critical region is exited (release).</li>
+        <li><strong>Entry:</strong> Data consistent when a critical region is entered (acquire).</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- CANVAS PAGE -->
+<div id="canvas-page">
+  <div class="workspace">
+    <div class="sidebar">
+      <div class="sidebar-header">▸ Topics</div>
+      <div class="sidebar-body" id="sidebar-body"></div>
+      <div class="legend-section" id="legend-section"></div>
+    </div>
+    <div class="main">
+      <div class="prog-wrap"><div class="prog-bar" id="prog-bar"></div></div>
+      <div class="canvas-wrap"><canvas id="c"></canvas></div>
+      <div class="log-wrap">
+        <div class="log-header">▸ STEP EXPLANATION</div>
+        <div class="log-body" id="log-body"></div>
+      </div>
+      <div class="controls">
+        <button class="btn" id="prevBtn" onclick="prevStep()">← PREV</button>
+        <button class="btn primary" id="playBtn" onclick="togglePlay()">▶ PLAY</button>
+        <button class="btn" id="nextBtn" onclick="nextStep()">NEXT →</button>
+        <button class="btn" onclick="resetSim()">↺ RESET</button>
+        <span class="step-info" id="step-info">Step 0/0</span>
+        <span class="speed-label">SPEED</span>
+        <input type="range" id="speed-slider" min="400" max="2500" value="1100" oninput="updateSpeed()">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── CANVAS ───────────────────────────────────
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W=0, H=0;
+function resizeCanvas(){
+  const wrap = canvas.parentElement;
+  W = canvas.width = wrap.clientWidth;
+  H = canvas.height = wrap.clientHeight;
+  draw();
+}
+window.addEventListener('resize', resizeCanvas);
+
+// ─── STATE ────────────────────────────────────
+let currentSim = null;
+let stepIdx = 0;
+let playing = false;
+let playTimer = null;
+let speed = 1100;
+
+// ─── SIMULATIONS ──────────────────────────────
+
+// 0: ARCHITECTURE
+function simArchitecture(){
+  const steps = [
+    {
+      desc:"Client–Server Model: The server waits for requests and has special privileges. Clients invoke the server when they need a service and block until they get a reply. One server can handle many concurrent clients.",
+      scene:'client-server', highlight:'', pageRef:'pp. 22–23',
+      nodes:[
+        {id:'S', label:'SERVER', x:0,y:0, color:'#4fffb0', shape:'rect'},
+        {id:'C1',label:'Client 1',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'C2',label:'Client 2',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'C3',label:'Client 3',x:0,y:0,color:'#7c83ff',shape:'circle'},
+      ],
+      arrows:[]
+    },
+    {
+      desc:"Client sends a REQUEST to the server. The client blocks and waits. The server processes the request and sends back a RESPONSE. This is synchronous communication.",
+      scene:'client-server', pageRef:'pp. 22–23',
+      nodes:[
+        {id:'S', label:'SERVER', x:0,y:0, color:'#4fffb0', shape:'rect'},
+        {id:'C1',label:'Client 1',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'C2',label:'Client 2',x:0,y:0,color:'#5a5f80',shape:'circle'},
+        {id:'C3',label:'Client 3',x:0,y:0,color:'#5a5f80',shape:'circle'},
+      ],
+      arrows:[
+        {from:'C1',to:'S',label:'REQUEST',color:'#7c83ff'},
+        {from:'S',to:'C1',label:'RESPONSE',color:'#4fffb0'},
+      ]
+    },
+    {
+      desc:"Problem with Client-Server: The server is a BOTTLENECK — all requests funnel through it. It is also a SINGLE POINT OF FAILURE — if it crashes, the entire service is unavailable.",
+      scene:'client-server', pageRef:'p. 23',
+      nodes:[
+        {id:'S', label:'SERVER\n⚠ CRASHED', x:0,y:0, color:'#ff6b6b', shape:'rect'},
+        {id:'C1',label:'Client 1',x:0,y:0,color:'#5a5f80',shape:'circle'},
+        {id:'C2',label:'Client 2',x:0,y:0,color:'#5a5f80',shape:'circle'},
+        {id:'C3',label:'Client 3',x:0,y:0,color:'#5a5f80',shape:'circle'},
+      ],
+      arrows:[]
+    },
+    {
+      desc:"Peer-to-Peer (P2P) Model: All processes are EQUAL — each acts as both a client and server simultaneously. No single point of failure. Much more scalable.",
+      scene:'p2p', pageRef:'pp. 24–25',
+      nodes:[
+        {id:'P1',label:'Peer 1',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'P2',label:'Peer 2',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'P3',label:'Peer 3',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'P4',label:'Peer 4',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'P5',label:'Peer 5',x:0,y:0,color:'#4fffb0',shape:'circle'},
+      ],
+      arrows:[
+        {from:'P1',to:'P3',label:'',color:'#4fffb0'},
+        {from:'P2',to:'P4',label:'',color:'#4fffb0'},
+        {from:'P3',to:'P5',label:'',color:'#4fffb0'},
+        {from:'P4',to:'P1',label:'',color:'#7c83ff'},
+        {from:'P5',to:'P2',label:'',color:'#7c83ff'},
+      ]
+    },
+    {
+      desc:"Proxy / Cache Server: A shared cache sits between clients and origin web servers. It stores recently-used objects. If a client requests something already cached, it returns it without contacting the origin server — reducing latency and load.",
+      scene:'proxy', pageRef:'p. 27',
+      nodes:[
+        {id:'PROXY',label:'PROXY\nCACHE',x:0,y:0,color:'#ffc947',shape:'rect'},
+        {id:'C1',label:'Client 1',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'C2',label:'Client 2',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'WS1',label:'Web\nServer',x:0,y:0,color:'#4fffb0',shape:'rect'},
+        {id:'WS2',label:'Web\nServer',x:0,y:0,color:'#4fffb0',shape:'rect'},
+      ],
+      arrows:[
+        {from:'C1',to:'PROXY',label:'request',color:'#7c83ff'},
+        {from:'C2',to:'PROXY',label:'request',color:'#7c83ff'},
+        {from:'PROXY',to:'WS1',label:'miss→fetch',color:'#ffc947'},
+        {from:'PROXY',to:'WS2',label:'miss→fetch',color:'#ffc947'},
+      ]
+    },
+  ];
+  return {name:'Architecture', steps, layout:'star',
+    concepts:[
+      {title:'Client-Server', pageRef:'pp. 22–23', text:'Server waits, client requests and blocks. Simple but creates a bottleneck.'},
+      {title:'P2P', pageRef:'pp. 24–25', text:'All nodes are equal — each is both client and server. Highly scalable.'},
+      {title:'Proxy/Cache', pageRef:'p. 27', text:'Intermediate server caches responses — reduces load on origin servers.'},
+    ],
+    legend:[
+      {color:'#4fffb0',label:'Server / Active node'},
+      {color:'#7c83ff',label:'Client / Peer'},
+      {color:'#ffc947',label:'Proxy / Cache'},
+      {color:'#ff6b6b',label:'Crashed / Bottleneck'},
+    ]
+  };
+}
+
+// 1: CLOCK SYNC
+function simClockSync(){
+  const steps = [
+    {
+      desc:"The Problem: Each machine has its own physical clock. Clocks run at slightly different rates (drift). Over time this leads to observable skew. Machine A might think it's 10:00:05 while B thinks it's 10:00:03 — events get wrong timestamps.",
+      pageRef:'pp. 41–52',
+      nodes:[
+        {id:'A',label:'Node A\n10:00:05',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'B',label:'Node B\n10:00:03',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'C',label:'Node C\n10:00:07',x:0,y:0,color:'#ff6b6b',shape:'circle'},
+      ],
+      arrows:[], note:'Clocks drift apart!'
+    },
+    {
+      desc:"Cristian's Algorithm: Process P sends a request to time server S. S replies with its timestamp C(S). P estimates its correct time as C(S) + Tround/2 — accounting for half the round-trip transmission time.",
+      pageRef:'pp. 53–59',
+      nodes:[
+        {id:'S',label:'TIME\nSERVER',x:0,y:0,color:'#ffc947',shape:'rect'},
+        {id:'P',label:'Process P',x:0,y:0,color:'#7c83ff',shape:'circle'},
+      ],
+      arrows:[
+        {from:'P',to:'S',label:'1. Request T',color:'#7c83ff'},
+        {from:'S',to:'P',label:'2. Reply C(S)',color:'#ffc947'},
+      ]
+    },
+    {
+      desc:"Cristian's Time Estimate: P sets its clock to C(S) + Tround/2. The accuracy is (Tround/2 − min_delay). The estimate improves if we repeat several times and take the trial with the minimum round-trip time.",
+      pageRef:'pp. 53–59',
+      nodes:[
+        {id:'S',label:'TIME\nSERVER\nT=14:30:00',x:0,y:0,color:'#ffc947',shape:'rect'},
+        {id:'P',label:'Process P\nT≈14:30:00\n+Tround/2',x:0,y:0,color:'#4fffb0',shape:'circle'},
+      ],
+      arrows:[{from:'S',to:'P',label:'C(S)',color:'#4fffb0'}]
+    },
+    {
+      desc:"NTP — Network Time Protocol: A tree of time servers. The root syncs with UTC. Each node synchronizes its children. Strata 1=direct UTC, Strata 2=synced from 1, Strata 3=synced from 2, etc.",
+      pageRef:'pp. 55–57',
+      nodes:[
+        {id:'UTC',label:'UTC\nRoot',x:0,y:0,color:'#ffc947',shape:'rect'},
+        {id:'S1a',label:'Stratum 1',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'S2a',label:'Stratum 2',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'S2b',label:'Stratum 2',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'S3a',label:'Stratum 3',x:0,y:0,color:'#5a5f80',shape:'circle'},
+        {id:'S3b',label:'Stratum 3',x:0,y:0,color:'#5a5f80',shape:'circle'},
+      ],
+      arrows:[
+        {from:'UTC',to:'S1a',label:'sync',color:'#ffc947'},
+        {from:'S1a',to:'S2a',label:'sync',color:'#4fffb0'},
+        {from:'S1a',to:'S2b',label:'sync',color:'#4fffb0'},
+        {from:'S2a',to:'S3a',label:'sync',color:'#7c83ff'},
+        {from:'S2b',to:'S3b',label:'sync',color:'#7c83ff'},
+      ]
+    },
+    {
+      desc:"Berkeley Algorithm: An elected master (daemon) polls all machines. It adjusts for RTT latency, averages all times, then tells each machine how much to adjust — not what time it is. Clocks never go backward.",
+      pageRef:'pp. 60–61',
+      nodes:[
+        {id:'D',label:'DAEMON\n(master)',x:0,y:0,color:'#ffc947',shape:'rect'},
+        {id:'M1',label:'Machine 1\n+2s ahead',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'M2',label:'Machine 2\n−1s behind',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'M3',label:'Machine 3\non time',x:0,y:0,color:'#4fffb0',shape:'circle'},
+      ],
+      arrows:[
+        {from:'D',to:'M1',label:'−2s adjust',color:'#ff6b6b'},
+        {from:'D',to:'M2',label:'+1s adjust',color:'#4fffb0'},
+        {from:'D',to:'M3',label:'no change',color:'#ffc947'},
+      ]
+    },
+  ];
+  return {name:'Clock Sync', steps, layout:'tree',
+    concepts:[
+      {title:'Clock Drift', pageRef:'p. 50', text:'Clocks run at different speeds. Quartz drift ≈ 10⁻⁶ s/s.'},
+      {title:"Cristian's Algo", pageRef:'pp. 53–59', text:'Sync to external UTC server. Estimate = C(S) + Tround/2.'},
+      {title:'NTP', pageRef:'pp. 55–57', text:'Hierarchical tree. Root = UTC. Strata 1→2→3.'},
+      {title:'Berkeley Algo', pageRef:'pp. 60–61', text:'Internal sync. Master averages clocks, tells each machine how much to adjust.'},
+    ],
+    legend:[
+      {color:'#ffc947',label:'Time server / Master'},
+      {color:'#4fffb0',label:'Synchronized / Correct'},
+      {color:'#7c83ff',label:'Client / Unsynchronized'},
+      {color:'#ff6b6b',label:'Ahead / Problem'},
+    ]
+  };
+}
+
+// 2: LAMPORT CLOCKS
+function simLamport(){
+  const steps = [
+    {
+      desc:"Three processes P1, P2, P3. Each has its own logical clock starting at 0. Events happen: P1 has event a, then b. P3 has event e. All clocks start at 0.",
+      nodes:[
+        {id:'P1',label:'P1\nL=0',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'P2',label:'P2\nL=0',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'P3',label:'P3\nL=0',x:0,y:0,color:'#7c83ff',shape:'circle'},
+      ],
+      arrows:[], pageRef:'pp. 66–69'
+    },
+    {
+      desc:"Rule 1: Before each event, increment your clock. P1 has event a → L1 becomes 1. P1 has event b → L1 becomes 2. P3 has event e → L3 becomes 1.",
+      nodes:[
+        {id:'P1',label:'P1\nL=2\n(events a,b)',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'P2',label:'P2\nL=0',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'P3',label:'P3\nL=1\n(event e)',x:0,y:0,color:'#4fffb0',shape:'circle'},
+      ],
+      arrows:[], pageRef:'pp. 66–69'
+    },
+    {
+      desc:"Rule 2a: When sending a message, piggyback the current timestamp. P1 sends message m1 with timestamp T=2 to P2.",
+      nodes:[
+        {id:'P1',label:'P1\nL=2',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'P2',label:'P2\nL=0',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'P3',label:'P3\nL=1',x:0,y:0,color:'#7c83ff',shape:'circle'},
+      ],
+      arrows:[{from:'P1',to:'P2',label:'m1 T=2',color:'#4fffb0'}], pageRef:'pp. 66–69'
+    },
+    {
+      desc:"Rule 2b: On receiving m1 (T=2), P2 computes: L2 = max(L2, T) + 1 = max(0, 2) + 1 = 3. P2's clock jumps to 3. This ensures the receive event is ordered AFTER the send event.",
+      nodes:[
+        {id:'P1',label:'P1\nL=2',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'P2',label:'P2\nL=3\n(received m1)',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'P3',label:'P3\nL=1',x:0,y:0,color:'#7c83ff',shape:'circle'},
+      ],
+      arrows:[], pageRef:'pp. 66–69'
+    },
+    {
+      desc:"P3 sends message m2 to P2 with timestamp T=1. P2 receives m2. P2 computes: L2 = max(3, 1) + 1 = 4. P2's clock is already ahead so it only increments by 1.",
+      nodes:[
+        {id:'P1',label:'P1\nL=2',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'P2',label:'P2\nL=4',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'P3',label:'P3\nL=2\n(sends m2)',x:0,y:0,color:'#4fffb0',shape:'circle'},
+      ],
+      arrows:[{from:'P3',to:'P2',label:'m2 T=1',color:'#ffc947'}], pageRef:'pp. 66–69'
+    },
+    {
+      desc:"Key Guarantee: if event a→b (a happens-before b), then L(a) < L(b). But the REVERSE is not guaranteed — L(a) < L(b) does NOT mean a→b. Two concurrent events can have ordered timestamps. This is the limitation Lamport clocks have.",
+      nodes:[
+        {id:'P1',label:'P1\nL(a)=1\nL(b)=2',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'P2',label:'P2\nL=3',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'P3',label:'P3\nL(e)=1',x:0,y:0,color:'#ff6b6b',shape:'circle'},
+      ],
+      arrows:[], pageRef:'pp. 66–69', note:'L(a)<L(b) ≠ a→b'
+    },
+  ];
+  return {name:'Lamport Clocks', steps, layout:'row',
+    concepts:[
+      {title:'Happens-Before (→)', pageRef:'pp. 64–65', text:'a→b if same process & a before b, or a=send(m) & b=receive(m), or transitivity.'},
+      {title:'Rule 1', pageRef:'p. 68', text:'Increment clock before every local event.'},
+      {title:'Rule 2a (send)', pageRef:'p. 68', text:'Piggyback current timestamp on every sent message.'},
+      {title:'Rule 2b (receive)', pageRef:'p. 68', text:'L = max(L, msg_timestamp) + 1'},
+      {title:'Limitation', pageRef:'pp. 68–69', text:'a→b ⟹ L(a)<L(b), but L(a)<L(b) ⟹ a→b is NOT guaranteed.'},
+    ],
+    legend:[
+      {color:'#4fffb0',label:'Active / Updated clock'},
+      {color:'#7c83ff',label:'Idle process'},
+      {color:'#ffc947',label:'Message in transit'},
+      {color:'#ff6b6b',label:'Limitation / Warning'},
+    ]
+  };
+}
+
+// 3: VECTOR CLOCKS
+function simVector(){
+  const steps = [
+    {
+      desc:"Vector Clocks fix Lamport's limitation. Each process maintains a VECTOR of N counters — one per process. Initially all zeros: P1=[0,0,0], P2=[0,0,0], P3=[0,0,0].",
+      nodes:[
+        {id:'P1',label:'P1\n[0,0,0]',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'P2',label:'P2\n[0,0,0]',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'P3',label:'P3\n[0,0,0]',x:0,y:0,color:'#7c83ff',shape:'circle'},
+      ],
+      arrows:[], pageRef:'pp. 71–87'
+    },
+    {
+      desc:"Before each event at Pi, increment V[i][i] (your own slot). P1 has event a → V1=[1,0,0]. P1 has event b → V1=[2,0,0]. P3 has event e → V3=[0,0,1].",
+      nodes:[
+        {id:'P1',label:'P1\n[2,0,0]\n(events a,b)',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'P2',label:'P2\n[0,0,0]',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'P3',label:'P3\n[0,0,1]\n(event e)',x:0,y:0,color:'#4fffb0',shape:'circle'},
+      ],
+      arrows:[], pageRef:'pp. 71–87'
+    },
+    {
+      desc:"P1 sends m1 to P2. Message carries P1's full vector [2,0,0]. P2 receives m1. P2 updates: V2[j] = max(V2[j], msg[j]) for all j, then increments V2[2].",
+      nodes:[
+        {id:'P1',label:'P1\n[2,0,0]',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'P2',label:'P2\n?',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'P3',label:'P3\n[0,0,1]',x:0,y:0,color:'#7c83ff',shape:'circle'},
+      ],
+      arrows:[{from:'P1',to:'P2',label:'m1 [2,0,0]',color:'#4fffb0'}], pageRef:'pp. 71–87'
+    },
+    {
+      desc:"P2 receives m1 with vector [2,0,0]. Update: max([0,0,0],[2,0,0]) = [2,0,0]. Then increment own slot: P2[2]++. Result: V2=[2,1,0]. P2 knows: 'P1 had 2 events before sending this; I have 1 event.'",
+      nodes:[
+        {id:'P1',label:'P1\n[2,0,0]',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'P2',label:'P2\n[2,1,0]\n(received m1)',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'P3',label:'P3\n[0,0,1]',x:0,y:0,color:'#7c83ff',shape:'circle'},
+      ],
+      arrows:[], pageRef:'pp. 71–87'
+    },
+    {
+      desc:"P2 sends m2 to P3 carrying [2,2,0]. P3 receives it. P3 updates: max([0,0,1],[2,2,0])=[2,2,1], then increment P3's own slot: V3=[2,2,2]. P3 now knows about all prior events.",
+      nodes:[
+        {id:'P1',label:'P1\n[2,0,0]',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'P2',label:'P2\n[2,2,0]\n(sends m2)',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'P3',label:'P3\n[2,2,2]',x:0,y:0,color:'#4fffb0',shape:'circle'},
+      ],
+      arrows:[{from:'P2',to:'P3',label:'m2 [2,2,0]',color:'#ffc947'}], pageRef:'pp. 71–87'
+    },
+    {
+      desc:"Comparison: event e has V(e)=[0,0,1]. Event a at P1 has V(a)=[1,0,0]. Neither [0,0,1]≤[1,0,0] nor [1,0,0]≤[0,0,1]. Therefore e and a are CONCURRENT — they cannot have caused each other. Vector clocks detect true concurrency!",
+      nodes:[
+        {id:'P1',label:'event a\n[1,0,0]',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'P2',label:'P2',x:0,y:0,color:'#5a5f80',shape:'circle'},
+        {id:'P3',label:'event e\n[0,0,1]',x:0,y:0,color:'#ffc947',shape:'circle'},
+      ],
+      arrows:[], note:'a and e are CONCURRENT', pageRef:'pp. 71–87'
+    },
+  ];
+  return {name:'Vector Clocks', steps, layout:'row',
+    concepts:[
+      {title:'Vector Structure', pageRef:'p. 71', text:'N-element array. V[i][j] = events at Pj that causally precede Pi\'s current state.'},
+      {title:'Increment rule', pageRef:'p. 84', text:'Before event at Pi: V[i][i] += 1'},
+      {title:'Send rule', pageRef:'p. 84', text:'Piggyback full vector with every message.'},
+      {title:'Receive rule', pageRef:'p. 84', text:'V[i][j] = max(V[i][j], t[j]) for all j, then increment own slot.'},
+      {title:'Concurrency detection', pageRef:'p. 71', text:'e→e\' iff V(e)≤V(e\'). Neither ≤ the other = concurrent.'},
+    ],
+    legend:[
+      {color:'#4fffb0',label:'Recently updated'},
+      {color:'#7c83ff',label:'Idle / Sending'},
+      {color:'#ffc947',label:'Message / Concurrent'},
+      {color:'#5a5f80',label:'Not involved'},
+    ]
+  };
+}
+
+// 4: REPLICATION
+function simReplication(){
+  const steps = [
+    {
+      desc:"Why Replicate? A single server has availability = 1−p. If p=0.05 (5% failure chance), one server has 95% availability. With 3 replicas: availability = 1 − (0.05)³ ≈ 99.99%. Replication dramatically increases availability.",
+      nodes:[
+        {id:'S',label:'Single\nServer\n95%',x:0,y:0,color:'#ff6b6b',shape:'rect'},
+        {id:'R1',label:'Replica 1\n99.99%',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'R2',label:'Replica 2',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'R3',label:'Replica 3',x:0,y:0,color:'#4fffb0',shape:'circle'},
+      ],
+      arrows:[], pageRef:'p. 95'
+    },
+    {
+      desc:"Architecture: Clients talk to Front Ends (FE). FEs provide replication TRANSPARENCY — clients don't know multiple copies exist. Each FE routes requests to Replica Managers (RM) which hold the actual data.",
+      nodes:[
+        {id:'C',label:'Client',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'FE',label:'Front\nEnd',x:0,y:0,color:'#ffc947',shape:'rect'},
+        {id:'RM1',label:'RM 1\n(data)',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'RM2',label:'RM 2\n(data)',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'RM3',label:'RM 3\n(data)',x:0,y:0,color:'#4fffb0',shape:'circle'},
+      ],
+      arrows:[
+        {from:'C',to:'FE',label:'request',color:'#7c83ff'},
+        {from:'FE',to:'RM1',label:'forward',color:'#ffc947'},
+        {from:'FE',to:'RM2',label:'forward',color:'#ffc947'},
+        {from:'FE',to:'RM3',label:'forward',color:'#ffc947'},
+      ], pageRef:'pp. 99–102'
+    },
+    {
+      desc:"5 Phases of Handling a Request: (1) REQUEST arrives at FE. (2) COORDINATION — RMs decide whether and in what order to execute. (3) EXECUTION — RMs execute the operation. (4) AGREEMENT — RMs reach consensus (e.g., commit/abort). (5) RESPONSE — one or more RMs reply to FE.",
+      nodes:[
+        {id:'FE',label:'Front\nEnd',x:0,y:0,color:'#ffc947',shape:'rect'},
+        {id:'RM1',label:'RM 1',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'RM2',label:'RM 2',x:0,y:0,color:'#4fffb0',shape:'circle'},
+      ],
+      arrows:[
+        {from:'FE',to:'RM1',label:'1.Request',color:'#ffc947'},
+        {from:'RM1',to:'RM2',label:'2.Coord',color:'#4fffb0'},
+        {from:'RM2',to:'FE',label:'5.Response',color:'#7c83ff'},
+      ], pageRef:'p. 104'
+    },
+    {
+      desc:"CAUSAL ordering of requests: If the issue of request r happened-before request r', then every correct RM must handle r before r'. This uses the happens-before relation from Lamport's logical clocks.",
+      nodes:[
+        {id:'RM1',label:'RM 1\nr then r\'',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'RM2',label:'RM 2\nr then r\'',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'RM3',label:'RM 3\nr then r\'',x:0,y:0,color:'#4fffb0',shape:'circle'},
+      ],
+      arrows:[
+        {from:'RM1',to:'RM2',label:'agree order',color:'#4fffb0'},
+        {from:'RM2',to:'RM3',label:'agree order',color:'#4fffb0'},
+      ], pageRef:'p. 105'
+    },
+  ];
+  return {name:'Replication', steps, layout:'star',
+    concepts:[
+      {title:'Why replicate?', pageRef:'pp. 93–96', text:'Performance, availability (1−pⁿ), fault tolerance.'},
+      {title:'Front End (FE)', pageRef:'pp. 99–102', text:'Hides replication from clients. Routes requests to RMs.'},
+      {title:'Replica Manager (RM)', pageRef:'p. 100', text:'Holds copies of data. Applies operations recoverably.'},
+      {title:'5 Phases', pageRef:'p. 104', text:'Request → Coordinate → Execute → Agree → Respond'},
+      {title:'Request ordering', pageRef:'p. 105', text:'FIFO, Causal, or Total ordering between RMs.'},
+    ],
+    legend:[
+      {color:'#4fffb0',label:'Replica Manager / OK'},
+      {color:'#ffc947',label:'Front End'},
+      {color:'#7c83ff',label:'Client'},
+      {color:'#ff6b6b',label:'Unavailable / Problem'},
+    ]
+  };
+}
+
+// 5: CONSISTENCY
+function simConsistency(){
+  const steps = [
+    {
+      desc:"Strict Consistency: Any read returns the result of the MOST RECENT write globally. Requires instantaneous propagation of writes. IMPOSSIBLE in practice — even light has finite speed. A write on host B cannot be instantly visible to host A.",
+      nodes:[
+        {id:'A',label:'Host A\nR(x)=?',x:0,y:0,color:'#ff6b6b',shape:'circle'},
+        {id:'B',label:'Host B\nW(x)=5',x:0,y:0,color:'#4fffb0',shape:'circle'},
+      ],
+      arrows:[{from:'B',to:'A',label:'instant?',color:'#ff6b6b'}],
+      note:'Impossible!', pageRef:'pp. 109–110'
+    },
+    {
+      desc:"Sequential Consistency: All processes see ALL operations in the SAME ORDER, consistent with each process's program order. No real-time requirement. Example: P1 writes x=1. P2 writes y=1. All processes must agree on a single interleaving — but that interleaving doesn't need to match wall-clock time.",
+      nodes:[
+        {id:'P1',label:'P1\nW(x)=1',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'P2',label:'P2\nW(y)=1',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'P3',label:'P3\nsees same\norder',x:0,y:0,color:'#ffc947',shape:'circle'},
+        {id:'P4',label:'P4\nsees same\norder',x:0,y:0,color:'#ffc947',shape:'circle'},
+      ],
+      arrows:[
+        {from:'P1',to:'P3',label:'W(x)=1',color:'#4fffb0'},
+        {from:'P2',to:'P3',label:'W(y)=1',color:'#7c83ff'},
+        {from:'P1',to:'P4',label:'W(x)=1',color:'#4fffb0'},
+        {from:'P2',to:'P4',label:'W(y)=1',color:'#7c83ff'},
+      ], pageRef:'pp. 112–117'
+    },
+    {
+      desc:"Causal Consistency: Only CAUSALLY RELATED writes must be seen in the same order. Concurrent writes (no causal link) can be seen in different orders. P2 reads x=a (written by P1) then writes x=b. P1→P2 is causal — all must see W(x)a before W(x)b.",
+      nodes:[
+        {id:'P1',label:'P1\nW(x)=a',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'P2',label:'P2\nR(x)=a\nW(x)=b',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'P3',label:'P3\nR(x)=a\nthen b ✓',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'P4',label:'P4\nR(x)=b\nthen a ✗',x:0,y:0,color:'#ff6b6b',shape:'circle'},
+      ],
+      arrows:[
+        {from:'P1',to:'P2',label:'causes',color:'#4fffb0'},
+      ], pageRef:'pp. 118–121'
+    },
+    {
+      desc:"FIFO Consistency: Writes from a SINGLE process are seen in order by all. Writes from DIFFERENT processes may appear in different orders at different observers. Weakest data-centric model without synchronization.",
+      nodes:[
+        {id:'P1',label:'P1\nW(x)=1\nW(x)=2',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'P2',label:'P2\nW(y)=a',x:0,y:0,color:'#7c83ff',shape:'circle'},
+        {id:'P3',label:'P3 sees:\nx=1,x=2✓\ny order?',x:0,y:0,color:'#ffc947',shape:'circle'},
+      ],
+      arrows:[
+        {from:'P1',to:'P3',label:'in order',color:'#4fffb0'},
+        {from:'P2',to:'P3',label:'any order',color:'#7c83ff'},
+      ], pageRef:'pp. 122–125'
+    },
+    {
+      desc:"Weak Consistency: Data can be relied upon ONLY AFTER a SYNCHRONIZE operation. Between synchronizations, stale data is possible. Synchronization variables are sequentially consistent. After sync, all previous writes are visible.",
+      nodes:[
+        {id:'P1',label:'P1\nW(x)=1\nW(y)=2\nSYNC',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'P2',label:'P2\nSYNC\nR(x)=1✓\nR(y)=2✓',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'P3',label:'P3\nR(x)=??\n(no sync)',x:0,y:0,color:'#ff6b6b',shape:'circle'},
+      ],
+      arrows:[{from:'P1',to:'P2',label:'sync',color:'#ffc947'}],
+      pageRef:'pp. 126–127'
+    },
+    {
+      desc:"Release Consistency: Uses acquire/release pairs. On ACQUIRE: pending operations from others are made visible. On RELEASE: your writes are propagated. Eager = push on release. Lazy = pull on acquire using timestamps.",
+      nodes:[
+        {id:'P1',label:'P1\nACQUIRE\nwrite x\nRELEASE',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'P2',label:'P2\nACQUIRE\ngets x✓\nRELEASE',x:0,y:0,color:'#7c83ff',shape:'circle'},
+      ],
+      arrows:[
+        {from:'P1',to:'P2',label:'release→\npropagate',color:'#4fffb0'},
+      ], pageRef:'pp. 128–131'
+    },
+    {
+      desc:"Entry Consistency: Each shared data item is associated with its OWN lock. Only data guarded by that lock is synchronized on acquire. Multiple critical sections with DISJOINT data can run concurrently — much more efficient than weak/release consistency.",
+      nodes:[
+        {id:'L1',label:'Lock 1\nguards x',x:0,y:0,color:'#ffc947',shape:'rect'},
+        {id:'L2',label:'Lock 2\nguards y',x:0,y:0,color:'#ffc947',shape:'rect'},
+        {id:'P1',label:'P1\nacquire L1\nwrite x',x:0,y:0,color:'#4fffb0',shape:'circle'},
+        {id:'P2',label:'P2\nacquire L2\nwrite y',x:0,y:0,color:'#4fffb0',shape:'circle'},
+      ],
+      arrows:[
+        {from:'P1',to:'L1',label:'acquire',color:'#4fffb0'},
+        {from:'P2',to:'L2',label:'acquire',color:'#4fffb0'},
+      ], note:'P1 and P2 run concurrently!', pageRef:'pp. 132–134'
+    },
+  ];
+  return {name:'Consistency', steps, layout:'spread',
+    concepts:[
+      {title:'Strict', pageRef:'pp.109–110', text:'Most recent write always read. Impossible in practice.'},
+      {title:'Sequential', pageRef:'pp.112–117', text:'All agree on same operation order. No real-time required.'},
+      {title:'Causal', pageRef:'pp.118–121', text:'Causally-related writes seen in same order. Concurrent may differ.'},
+      {title:'FIFO', pageRef:'pp.122–125', text:'Per-process order preserved. Cross-process may differ.'},
+      {title:'Weak', pageRef:'pp.126–127', text:'Consistent only after sync. Flushes the pipeline.'},
+      {title:'Release', pageRef:'pp.128–131', text:'Consistent on critical section exit. Eager or lazy.'},
+      {title:'Entry', pageRef:'pp.132–134', text:'Per-lock consistency. Most fine-grained. Concurrent CS possible.'},
+    ],
+    legend:[
+      {color:'#4fffb0',label:'Consistent / Correct'},
+      {color:'#7c83ff',label:'Normal process'},
+      {color:'#ffc947',label:'Sync variable / Lock'},
+      {color:'#ff6b6b',label:'Violation / Problem'},
+    ]
+  };
+}
+
+const SIMS = [simArchitecture, simClockSync, simLamport, simVector, simReplication, simConsistency];
+
+// ─── LAYOUT ──────────────────────────────────
+function layoutNodes(nodes, layout){
+  const cx=W/2, cy=H/2;
+  const r=Math.min(W,H)*0.3;
+  if(layout==='row'){
+    nodes.forEach((n,i)=>{
+      n.x=W*(i+1)/(nodes.length+1);
+      n.y=cy;
+    });
+  } else if(layout==='ring'||layout==='p2p'||layout==='spread'){
+    nodes.forEach((n,i)=>{
+      const a=(i/nodes.length)*Math.PI*2-Math.PI/2;
+      n.x=cx+Math.cos(a)*r; n.y=cy+Math.sin(a)*r;
+    });
+  } else if(layout==='star'){
+    if(nodes.length===0) return;
+    nodes[0].x=cx; nodes[0].y=cy;
+    const sr=r*0.9;
+    for(let i=1;i<nodes.length;i++){
+      const a=((i-1)/(nodes.length-1))*Math.PI*2-Math.PI/2;
+      nodes[i].x=cx+Math.cos(a)*sr;
+      nodes[i].y=cy+Math.sin(a)*sr;
+    }
+  } else if(layout==='tree'){
+    const levels=[[0],[1,2],[3,4,5]].filter(l=>l.some(i=>i<nodes.length));
+    let ni=0;
+    levels.forEach((level,li)=>{
+      const y=H*0.18+li*(H*0.32);
+      level.forEach((idx,j)=>{
+        if(idx<nodes.length){
+          nodes[idx].x=W*(j+1)/(level.length+1);
+          nodes[idx].y=y;
+        }
+      });
+    });
+  } else {
+    nodes.forEach((n,i)=>{
+      const a=(i/nodes.length)*Math.PI*2-Math.PI/2;
+      n.x=cx+Math.cos(a)*r; n.y=cy+Math.sin(a)*r;
+    });
+  }
+}
+
+// ─── DRAW ─────────────────────────────────────
+let currentStep = null;
+
+function draw(){
+  if(!currentSim) return;
+  ctx.clearRect(0,0,W,H);
+  if(!currentStep) return;
+  const nodes = currentStep.nodes || [];
+  layoutNodes(nodes, currentSim.layout);
+
+  // ring connections
+  if(currentSim.layout==='ring'||currentSim.layout==='p2p'){
+    ctx.strokeStyle='#1a1d30'; ctx.lineWidth=1.5; ctx.setLineDash([3,5]);
+    nodes.forEach((n,i)=>{
+      const nx=nodes[(i+1)%nodes.length];
+      ctx.beginPath(); ctx.moveTo(n.x,n.y); ctx.lineTo(nx.x,nx.y); ctx.stroke();
+    });
+    ctx.setLineDash([]);
+  }
+
+  // arrows
+  (currentStep.arrows||[]).forEach(a=>{
+    const f=nodes.find(n=>n.id===a.from);
+    const t=nodes.find(n=>n.id===a.to);
+    if(f&&t) drawArrow(f.x,f.y,t.x,t.y,a.label,a.color);
+  });
+
+  // nodes
+  nodes.forEach(n=>drawNode(n));
+
+  // note
+  if(currentStep.note){
+    ctx.fillStyle='#ffc947';
+    ctx.font=`bold 12px 'IBM Plex Mono',monospace`;
+    ctx.textAlign='center';
+    ctx.fillText(currentStep.note, W/2, H-20);
+  }
+
+  // page ref
+  if(currentStep.pageRef){
+    ctx.fillStyle='#3a3f60';
+    ctx.font=`10px 'IBM Plex Mono',monospace`;
+    ctx.textAlign='right';
+    ctx.fillText('Lecture ref: '+currentStep.pageRef, W-16, H-16);
+  }
+}
+
+function drawNode(n){
+  const R=30;
+  ctx.shadowColor=n.color; ctx.shadowBlur=16;
+  if(n.shape==='rect'){
+    ctx.beginPath();
+    ctx.roundRect(n.x-R,n.y-R,R*2,R*2,5);
+  } else {
+    ctx.beginPath(); ctx.arc(n.x,n.y,R,0,Math.PI*2);
+  }
+  ctx.fillStyle=n.color+'22';
+  ctx.fill();
+  ctx.strokeStyle=n.color; ctx.lineWidth=2; ctx.stroke();
+  ctx.shadowBlur=0;
+
+  ctx.fillStyle=n.color;
+  ctx.font=`bold 10px 'IBM Plex Mono',monospace`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  const lines=(n.label||'').split('\n');
+  const lh=13;
+  lines.forEach((l,i)=>ctx.fillText(l, n.x, n.y+(i-(lines.length-1)/2)*lh));
+}
+
+function drawArrow(x1,y1,x2,y2,label,color){
+  const R=32;
+  const dx=x2-x1,dy=y2-y1,dist=Math.sqrt(dx*dx+dy*dy);
+  if(dist<1) return;
+  const ux=dx/dist,uy=dy/dist;
+  const sx=x1+ux*R, sy=y1+uy*R;
+  const ex=x2-ux*R, ey=y2-uy*R;
+  const mx=(sx+ex)/2-uy*18, my=(sy+ey)/2+ux*18;
+  ctx.beginPath(); ctx.moveTo(sx,sy); ctx.quadraticCurveTo(mx,my,ex,ey);
+  ctx.strokeStyle=color; ctx.lineWidth=2;
+  ctx.shadowColor=color; ctx.shadowBlur=6; ctx.stroke(); ctx.shadowBlur=0;
+  const ang=Math.atan2(ey-my,ex-mx);
+  ctx.save(); ctx.translate(ex,ey); ctx.rotate(ang);
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(-9,-4); ctx.lineTo(-9,4); ctx.closePath();
+  ctx.fillStyle=color; ctx.fill(); ctx.restore();
+  if(label){
+    const lx=(sx+ex)/2-uy*26, ly=(sy+ey)/2+ux*26;
+    const lines=label.split('\n');
+    ctx.fillStyle='#07080f';
+    ctx.fillRect(lx-34,ly-8*lines.length,68,17*lines.length);
+    ctx.fillStyle=color;
+    ctx.font=`bold 9px 'IBM Plex Mono',monospace`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    lines.forEach((l,i)=>ctx.fillText(l, lx, ly-8*(lines.length-1)/2+i*16));
+  }
+}
+
+// ─── STEP CONTROL ────────────────────────────
+function goStep(idx){
+  if(!currentSim) return;
+  const steps=currentSim.steps;
+  if(idx<0||idx>=steps.length) return;
+  stepIdx=idx;
+  currentStep=steps[idx];
+  draw();
+  updateLog();
+  updateUI();
+}
+function nextStep(){if(stepIdx<currentSim.steps.length-1) goStep(stepIdx+1); else stopPlay();}
+function prevStep(){goStep(stepIdx-1);}
+function resetSim(){stopPlay();goStep(0);}
+function togglePlay(){if(playing) stopPlay(); else startPlay();}
+function startPlay(){
+  playing=true;
+  document.getElementById('playBtn').textContent='⏸ PAUSE';
+  playTimer=setInterval(()=>{
+    if(stepIdx>=currentSim.steps.length-1){stopPlay();return;}
+    nextStep();
+  },speed);
+}
+function stopPlay(){
+  playing=false;
+  document.getElementById('playBtn').textContent='▶ PLAY';
+  clearInterval(playTimer);
+}
+function updateSpeed(){
+  speed=parseInt(document.getElementById('speed-slider').value);
+  if(playing){stopPlay();startPlay();}
+}
+
+function updateLog(){
+  const body=document.getElementById('log-body');
+  body.innerHTML=currentSim.steps.map((s,i)=>`
+    <div class="log-entry ${i===stepIdx?'active':''}">
+      <span class="sn">${String(i+1).padStart(2,'0')}</span>${s.desc}
+    </div>`).join('');
+  const a=body.querySelector('.active');
+  if(a) a.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function updateUI(){
+  const n=currentSim.steps.length;
+  document.getElementById('step-info').textContent=`Step ${stepIdx+1}/${n}`;
+  document.getElementById('prog-bar').style.width=`${((stepIdx+1)/n)*100}%`;
+  document.getElementById('prevBtn').disabled=stepIdx===0;
+  document.getElementById('nextBtn').disabled=stepIdx===n-1;
+}
+function updateSidebar(){
+  const body=document.getElementById('sidebar-body');
+  body.innerHTML=(currentSim.concepts||[]).map(c=>`
+    <div class="side-card">
+      <div class="page-ref">📄 ${c.pageRef}</div>
+      <h3>${c.title}</h3>
+      <p>${c.text}</p>
+    </div>`).join('');
+  const leg=document.getElementById('legend-section');
+  leg.innerHTML=`<div class="legend-title">LEGEND</div>`+
+    (currentSim.legend||[]).map(l=>`
+      <div class="legend-item">
+        <div class="ldot" style="background:${l.color};box-shadow:0 0 5px ${l.color}88"></div>
+        ${l.label}
+      </div>`).join('');
+}
+
+// ─── TAB SWITCHING ───────────────────────────
+function showHome(){
+  stopPlay();
+  document.getElementById('home-page').classList.add('visible');
+  document.getElementById('canvas-page').classList.remove('visible');
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+}
+function showSim(idx){
+  stopPlay();
+  document.getElementById('home-page').classList.remove('visible');
+  document.getElementById('canvas-page').classList.add('visible');
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===idx+1));
+  currentSim=SIMS[idx]();
+  stepIdx=0;
+  currentStep=currentSim.steps[0];
+  updateSidebar();
+  updateLog();
+  updateUI();
+  resizeCanvas();
+}
+
+window.addEventListener('load',()=>{
+  resizeCanvas();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Distributed Election & Mutual Exclusion</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --panel: #111118;
+    --border: #1e1e2e;
+    --accent: #00f5c4;
+    --accent2: #ff4d6d;
+    --accent3: #ffd166;
+    --accent4: #a78bfa;
+    --text: #e8e8f0;
+    --muted: #5a5a7a;
+    --node-active: #00f5c4;
+    --node-idle: #1e1e3a;
+    --node-crashed: #2a0a0f;
+    --node-winner: #ffd166;
+    --msg-color: #ff4d6d;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Header ── */
+  header {
+    padding: 2rem 3rem 1rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+  header .badge {
+    font-family: 'Space Mono', monospace;
+    font-size: .65rem;
+    background: var(--accent);
+    color: #000;
+    padding: .25rem .6rem;
+    letter-spacing: .1em;
+  }
+  header h1 { font-size: 1.4rem; font-weight: 800; letter-spacing: -.02em; }
+  header h1 span { color: var(--accent); }
+
+  /* ── Nav tabs ── */
+  nav {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  nav button {
+    font-family: 'Space Mono', monospace;
+    font-size: .72rem;
+    letter-spacing: .05em;
+    padding: .9rem 1.6rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .2s;
+    white-space: nowrap;
+  }
+  nav button:hover { color: var(--text); }
+  nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── Main layout ── */
+  .container { display: flex; height: calc(100vh - 8rem); }
+  .sidebar {
+    width: 280px;
+    min-width: 280px;
+    border-right: 1px solid var(--border);
+    padding: 1.5rem;
+    overflow-y: auto;
+  }
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .canvas-area {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+  canvas { position: absolute; top:0; left:0; }
+
+  /* ── Explanation log ── */
+  .log-area {
+    height: 160px;
+    border-top: 1px solid var(--border);
+    padding: 1rem 1.5rem;
+    overflow-y: auto;
+    background: #0d0d14;
+  }
+  .log-title {
+    font-family: 'Space Mono', monospace;
+    font-size: .65rem;
+    color: var(--muted);
+    letter-spacing: .1em;
+    margin-bottom: .5rem;
+  }
+  .log-entry {
+    font-size: .82rem;
+    line-height: 1.6;
+    padding: .2rem 0;
+    border-left: 2px solid transparent;
+    padding-left: .6rem;
+    color: var(--muted);
+    transition: all .3s;
+  }
+  .log-entry.active {
+    color: var(--text);
+    border-color: var(--accent);
+  }
+  .log-entry .step-num {
+    font-family: 'Space Mono', monospace;
+    font-size: .65rem;
+    color: var(--accent);
+    margin-right: .4rem;
+  }
+
+  /* ── Controls ── */
+  .controls {
+    display: flex;
+    gap: .8rem;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border);
+    background: var(--panel);
+  }
+  .btn {
+    font-family: 'Space Mono', monospace;
+    font-size: .72rem;
+    letter-spacing: .05em;
+    padding: .55rem 1.2rem;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--text);
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+  .btn.primary:hover { background: #00d4a8; }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  .speed-label {
+    font-family: 'Space Mono', monospace;
+    font-size: .65rem;
+    color: var(--muted);
+    margin-left: auto;
+  }
+  input[type=range] {
+    accent-color: var(--accent);
+    width: 80px;
+  }
+
+  /* ── Sidebar sections ── */
+  .sidebar h2 {
+    font-size: .7rem;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: .1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .concept-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 1rem;
+    margin-bottom: .8rem;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+  }
+  .concept-card:hover, .concept-card.active {
+    border-color: var(--accent);
+  }
+  .concept-card.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent);
+  }
+  .concept-card h3 { font-size: .85rem; font-weight: 600; margin-bottom: .3rem; }
+  .concept-card p { font-size: .72rem; color: var(--muted); line-height: 1.5; }
+
+  .legend { margin-top: 1.5rem; }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin-bottom: .5rem;
+    font-size: .72rem;
+    color: var(--muted);
+  }
+  .legend-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── Progress ── */
+  .progress-bar-wrap {
+    height: 2px;
+    background: var(--border);
+    margin-bottom: 0;
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--accent);
+    transition: width .3s;
+  }
+
+  /* ── Step counter ── */
+  .step-counter {
+    font-family: 'Space Mono', monospace;
+    font-size: .65rem;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">LECTURE 4</div>
+  <h1>Distributed <span>Election</span> & Mutual Exclusion</h1>
+</header>
+
+<nav id="nav">
+  <button class="active" onclick="switchTab(0)">01 — Bully Algorithm</button>
+  <button onclick="switchTab(1)">02 — Ring Election</button>
+  <button onclick="switchTab(2)">03 — Central Server ME</button>
+  <button onclick="switchTab(3)">04 — Token Ring ME</button>
+  <button onclick="switchTab(4)">05 — Ricart-Agrawala</button>
+</nav>
+
+<div class="container">
+  <div class="sidebar">
+    <h2>Concepts</h2>
+    <div id="concept-cards"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="main">
+    <div class="progress-bar-wrap"><div class="progress-bar" id="progress"></div></div>
+    <div class="canvas-area">
+      <canvas id="c"></canvas>
+    </div>
+    <div class="log-area">
+      <div class="log-title">▸ STEP LOG</div>
+      <div id="log"></div>
+    </div>
+    <div class="controls">
+      <button class="btn" id="prevBtn" onclick="prevStep()">← PREV</button>
+      <button class="btn primary" id="playBtn" onclick="togglePlay()">▶ PLAY</button>
+      <button class="btn" id="nextBtn" onclick="nextStep()">NEXT →</button>
+      <button class="btn" onclick="resetSim()">↺ RESET</button>
+      <span class="step-counter" id="stepCounter">Step 0 / 0</span>
+      <span class="speed-label">SPEED</span>
+      <input type="range" id="speedSlider" min="300" max="2000" value="900" oninput="updateSpeed()">
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  CANVAS SETUP
+// ─────────────────────────────────────────────
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W, H;
+
+function resize() {
+  const area = canvas.parentElement;
+  W = canvas.width = area.clientWidth;
+  H = canvas.height = area.clientHeight;
+  draw();
+}
+window.addEventListener('resize', resize);
+
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let currentTab = 0;
+let stepIndex = 0;
+let playing = false;
+let playTimer = null;
+let speed = 900;
+let animFrame = null;
+let particles = [];
+let flashNodes = {};      // nodeId -> {color, alpha}
+let arrowAnimations = []; // active arrows flying
+
+// ─────────────────────────────────────────────
+//  TABS DEFINITION
+// ─────────────────────────────────────────────
+const TABS = [bullySim, ringSim, centralMESim, tokenRingSim, ricartSim];
+const TAB_NAMES = ['Bully','Ring Election','Central ME','Token Ring','Ricart-Agrawala'];
+
+// ─────────────────────────────────────────────
+//  BULLY ALGORITHM
+// ─────────────────────────────────────────────
+function bullySim() {
+  const nodes = [
+    { id: 'N3',  label: 'N3',  x:0, y:0, state:'idle' },
+    { id: 'N6',  label: 'N6',  x:0, y:0, state:'idle' },
+    { id: 'N12', label: 'N12', x:0, y:0, state:'idle' },
+    { id: 'N32', label: 'N32', x:0, y:0, state:'idle' },
+    { id: 'N80', label: 'N80', x:0, y:0, state:'coordinator' },
+  ];
+  // positions set in draw based on W/H
+
+  const steps = [
+    {
+      desc: "Initial state: N80 is the current coordinator (master). All other nodes know this.",
+      nodes: { N3:'idle', N6:'idle', N12:'idle', N32:'idle', N80:'coordinator' },
+      arrows: [], flash: { N80: '#ffd166' }
+    },
+    {
+      desc: "N80 crashes! N3 detects the failure (e.g., by timeout waiting for heartbeat).",
+      nodes: { N3:'active', N6:'idle', N12:'idle', N32:'idle', N80:'crashed' },
+      arrows: [], flash: { N80: '#ff4d6d', N3: '#00f5c4' }
+    },
+    {
+      desc: "N3 starts an ELECTION. It sends ELECTION messages to all higher-ID nodes: N6, N12, N32, N80.",
+      nodes: { N3:'active', N6:'idle', N12:'idle', N32:'idle', N80:'crashed' },
+      arrows: [
+        {from:'N3', to:'N6',  label:'ELECTION', color:'#00f5c4'},
+        {from:'N3', to:'N12', label:'ELECTION', color:'#00f5c4'},
+        {from:'N3', to:'N32', label:'ELECTION', color:'#00f5c4'},
+      ],
+      flash: { N3: '#00f5c4' }
+    },
+    {
+      desc: "N6 and N12 reply OK to N3 — they are alive and have higher IDs. N80 does NOT reply (crashed).",
+      nodes: { N3:'waiting', N6:'active', N12:'active', N32:'idle', N80:'crashed' },
+      arrows: [
+        {from:'N6',  to:'N3', label:'OK', color:'#a78bfa'},
+        {from:'N12', to:'N3', label:'OK', color:'#a78bfa'},
+      ],
+      flash: { N6:'#a78bfa', N12:'#a78bfa' }
+    },
+    {
+      desc: "N6 and N12 each start their own ELECTION, sending to higher-ID nodes (N12/N32, N32).",
+      nodes: { N3:'idle', N6:'active', N12:'active', N32:'idle', N80:'crashed' },
+      arrows: [
+        {from:'N6',  to:'N12', label:'ELECTION', color:'#00f5c4'},
+        {from:'N6',  to:'N32', label:'ELECTION', color:'#00f5c4'},
+        {from:'N12', to:'N32', label:'ELECTION', color:'#00f5c4'},
+      ],
+      flash: { N6:'#00f5c4', N12:'#00f5c4' }
+    },
+    {
+      desc: "N32 replies OK to both N6 and N12, stopping their elections. N32 is the highest alive node.",
+      nodes: { N3:'idle', N6:'idle', N12:'idle', N32:'active', N80:'crashed' },
+      arrows: [
+        {from:'N32', to:'N6',  label:'OK', color:'#a78bfa'},
+        {from:'N32', to:'N12', label:'OK', color:'#a78bfa'},
+      ],
+      flash: { N32:'#a78bfa' }
+    },
+    {
+      desc: "N32 sends ELECTION to N80 (only higher node). N80 does NOT reply — it's crashed.",
+      nodes: { N3:'idle', N6:'idle', N12:'idle', N32:'active', N80:'crashed' },
+      arrows: [
+        {from:'N32', to:'N80', label:'ELECTION', color:'#00f5c4'},
+      ],
+      flash: { N32:'#00f5c4', N80:'#ff4d6d' }
+    },
+    {
+      desc: "N32 times out waiting for N80. No reply received → N32 wins by default!",
+      nodes: { N3:'idle', N6:'idle', N12:'idle', N32:'winner', N80:'crashed' },
+      arrows: [],
+      flash: { N32:'#ffd166' }
+    },
+    {
+      desc: "N32 broadcasts COORDINATOR message to all lower-ID nodes. Election complete!",
+      nodes: { N3:'idle', N6:'idle', N12:'idle', N32:'coordinator', N80:'crashed' },
+      arrows: [
+        {from:'N32', to:'N3',  label:'COORD', color:'#ffd166'},
+        {from:'N32', to:'N6',  label:'COORD', color:'#ffd166'},
+        {from:'N32', to:'N12', label:'COORD', color:'#ffd166'},
+      ],
+      flash: { N32:'#ffd166', N3:'#ffd166', N6:'#ffd166', N12:'#ffd166' }
+    },
+  ];
+
+  return {
+    name: 'Bully Algorithm',
+    nodes,
+    steps,
+    layout: 'scatter',
+    concepts: [
+      { title: 'Core Idea', text: 'The highest-ID alive process "bullies" its way to become coordinator.' },
+      { title: 'Election Message', text: 'Sent to all processes with higher IDs to see if anyone higher is alive.' },
+      { title: 'OK Message', text: 'Sent back to say "I am alive and will take over from you."' },
+      { title: 'Coordinator Message', text: 'Broadcast by the winner to inform all lower-ID nodes.' },
+      { title: 'Timeout', text: 'If no OK received within T = 2×Ttrans + Tprocess, declare victory.' },
+    ],
+    legend: [
+      { color: '#ffd166', label: 'Coordinator / Winner' },
+      { color: '#00f5c4', label: 'Active / Initiating' },
+      { color: '#a78bfa', label: 'Responding OK' },
+      { color: '#ff4d6d', label: 'Crashed' },
+      { color: '#5a5a7a', label: 'Idle' },
+    ]
+  };
+}
+
+// ─────────────────────────────────────────────
+//  RING ELECTION
+// ─────────────────────────────────────────────
+function ringSim() {
+  const nodes = [
+    { id: 'N3',  label: 'N3',  x:0, y:0 },
+    { id: 'N6',  label: 'N6',  x:0, y:0 },
+    { id: 'N12', label: 'N12', x:0, y:0 },
+    { id: 'N32', label: 'N32', x:0, y:0 },
+    { id: 'N80', label: 'N80', x:0, y:0 },
+    { id: 'N5',  label: 'N5',  x:0, y:0 },
+  ];
+
+  const steps = [
+    {
+      desc: "Ring topology: N3→N6→N12→N32→N80→N5→N3. N80 (coordinator) has crashed.",
+      nodes: { N3:'idle', N6:'idle', N12:'idle', N32:'idle', N80:'crashed', N5:'idle' },
+      arrows: [], flash: { N80:'#ff4d6d' }, msgLabel: ''
+    },
+    {
+      desc: "N3 detects failure. Marks itself 'participant', sends ELECTION[3] to neighbor N6.",
+      nodes: { N3:'active', N6:'idle', N12:'idle', N32:'idle', N80:'crashed', N5:'idle' },
+      arrows: [{from:'N3', to:'N6', label:'ELEC[3]', color:'#00f5c4'}],
+      flash: { N3:'#00f5c4' }
+    },
+    {
+      desc: "N6 receives ELECTION[3]. Since 6 > 3, N6 substitutes its own ID. Sends ELECTION[6] to N12.",
+      nodes: { N3:'idle', N6:'active', N12:'idle', N32:'idle', N80:'crashed', N5:'idle' },
+      arrows: [{from:'N6', to:'N12', label:'ELEC[6]', color:'#00f5c4'}],
+      flash: { N6:'#00f5c4' }
+    },
+    {
+      desc: "N12 receives ELECTION[6]. Since 12 > 6, substitutes own ID. Sends ELECTION[12] to N32.",
+      nodes: { N3:'idle', N6:'idle', N12:'active', N32:'idle', N80:'crashed', N5:'idle' },
+      arrows: [{from:'N12', to:'N32', label:'ELEC[12]', color:'#00f5c4'}],
+      flash: { N12:'#00f5c4' }
+    },
+    {
+      desc: "N32 receives ELECTION[12]. Since 32 > 12, substitutes own ID. Sends ELECTION[32] to N80.",
+      nodes: { N3:'idle', N6:'idle', N12:'idle', N32:'active', N80:'crashed', N5:'idle' },
+      arrows: [{from:'N32', to:'N80', label:'ELEC[32]', color:'#00f5c4'}],
+      flash: { N32:'#00f5c4' }
+    },
+    {
+      desc: "N80 is crashed! N32 times out. Message is forwarded to N5 (skipping N80).",
+      nodes: { N3:'idle', N6:'idle', N12:'idle', N32:'active', N80:'crashed', N5:'idle' },
+      arrows: [{from:'N32', to:'N5', label:'ELEC[32]', color:'#00f5c4'}],
+      flash: { N80:'#ff4d6d', N32:'#00f5c4' }
+    },
+    {
+      desc: "N5 receives ELECTION[32]. Since 32 > 5, forwards unchanged to N3. N5 becomes participant.",
+      nodes: { N3:'idle', N6:'idle', N12:'idle', N32:'idle', N80:'crashed', N5:'active' },
+      arrows: [{from:'N5', to:'N3', label:'ELEC[32]', color:'#00f5c4'}],
+      flash: { N5:'#00f5c4' }
+    },
+    {
+      desc: "N3 receives ELECTION[32]. Since 32 > 3, forwards to N6. The highest ID so far is 32.",
+      nodes: { N3:'active', N6:'idle', N12:'idle', N32:'idle', N80:'crashed', N5:'idle' },
+      arrows: [{from:'N3', to:'N6', label:'ELEC[32]', color:'#00f5c4'}],
+      flash: { N3:'#00f5c4' }
+    },
+    {
+      desc: "Message travels around: N6→N12→N32. N32 receives its OWN ID back → it's the winner!",
+      nodes: { N3:'idle', N6:'idle', N12:'idle', N32:'winner', N80:'crashed', N5:'idle' },
+      arrows: [{from:'N6', to:'N12', label:'ELEC[32]', color:'#ffd166'}, {from:'N12', to:'N32', label:'ELEC[32]', color:'#ffd166'}],
+      flash: { N32:'#ffd166' }
+    },
+    {
+      desc: "N32 sends ELECTED[32] around the ring. Each node records 'coordinator = N32'.",
+      nodes: { N3:'idle', N6:'idle', N12:'idle', N32:'coordinator', N80:'crashed', N5:'idle' },
+      arrows: [
+        {from:'N32', to:'N5', label:'ELECTED[32]', color:'#ffd166'},
+        {from:'N5',  to:'N3', label:'ELECTED[32]', color:'#ffd166'},
+        {from:'N3',  to:'N6', label:'ELECTED[32]', color:'#ffd166'},
+      ],
+      flash: { N32:'#ffd166', N5:'#ffd166', N3:'#ffd166', N6:'#ffd166' }
+    },
+  ];
+
+  return {
+    name: 'Ring Election',
+    nodes, steps,
+    layout: 'ring',
+    concepts: [
+      { title: 'Ring Topology', text: 'Each process only communicates with its next neighbor.' },
+      { title: 'ELECTION message', text: 'Carries the highest ID seen so far as it travels around.' },
+      { title: 'Substitution Rule', text: 'If your ID is higher than the message ID, replace it.' },
+      { title: 'Termination', text: 'When a process receives its own ID back, it won.' },
+      { title: 'ELECTED message', text: 'Sent around to notify everyone of the new coordinator.' },
+      { title: 'Cost', text: '(N-1) + N + N = 3N-1 messages total.' },
+    ],
+    legend: [
+      { color: '#ffd166', label: 'Coordinator / Winner' },
+      { color: '#00f5c4', label: 'Active / Forwarding' },
+      { color: '#ff4d6d', label: 'Crashed' },
+      { color: '#5a5a7a', label: 'Idle' },
+    ]
+  };
+}
+
+// ─────────────────────────────────────────────
+//  CENTRAL SERVER ME
+// ─────────────────────────────────────────────
+function centralMESim() {
+  const nodes = [
+    { id: 'S',  label: 'SERVER', x:0, y:0, isServer:true },
+    { id: 'P1', label: 'P1', x:0, y:0 },
+    { id: 'P2', label: 'P2', x:0, y:0 },
+    { id: 'P3', label: 'P3', x:0, y:0 },
+  ];
+
+  const steps = [
+    {
+      desc: "Central server manages access to the Critical Section (CS). All processes start idle.",
+      nodes: { S:'coordinator', P1:'idle', P2:'idle', P3:'idle' },
+      arrows: [], flash: { S:'#ffd166' }, queue: []
+    },
+    {
+      desc: "P1 wants to enter the Critical Section. It sends a REQUEST TOKEN to the server.",
+      nodes: { S:'coordinator', P1:'active', P2:'idle', P3:'idle' },
+      arrows: [{from:'P1', to:'S', label:'REQUEST', color:'#00f5c4'}],
+      flash: { P1:'#00f5c4' }, queue: []
+    },
+    {
+      desc: "Server sees the queue is empty. It grants P1 access immediately with GRANT TOKEN.",
+      nodes: { S:'coordinator', P1:'cs', P2:'idle', P3:'idle' },
+      arrows: [{from:'S', to:'P1', label:'GRANT', color:'#ffd166'}],
+      flash: { S:'#ffd166', P1:'#ffd166' }, queue: []
+    },
+    {
+      desc: "P1 is now in the Critical Section. P2 also wants to enter and sends REQUEST to server.",
+      nodes: { S:'coordinator', P1:'cs', P2:'active', P3:'idle' },
+      arrows: [{from:'P2', to:'S', label:'REQUEST', color:'#00f5c4'}],
+      flash: { P2:'#00f5c4' }, queue: ['P2']
+    },
+    {
+      desc: "Server sees CS is busy (P1 has it). Server queues P2's request — no reply yet.",
+      nodes: { S:'coordinator', P1:'cs', P2:'waiting', P3:'idle' },
+      arrows: [], flash: { S:'#a78bfa' }, queue: ['P2']
+    },
+    {
+      desc: "P3 also requests entry. Server adds P3 to queue behind P2.",
+      nodes: { S:'coordinator', P1:'cs', P2:'waiting', P3:'active' },
+      arrows: [{from:'P3', to:'S', label:'REQUEST', color:'#00f5c4'}],
+      flash: { P3:'#00f5c4' }, queue: ['P2','P3']
+    },
+    {
+      desc: "P1 finishes its work in the CS and sends RELEASE TOKEN to the server.",
+      nodes: { S:'coordinator', P1:'idle', P2:'waiting', P3:'waiting' },
+      arrows: [{from:'P1', to:'S', label:'RELEASE', color:'#ff4d6d'}],
+      flash: { P1:'#ff4d6d' }, queue: ['P2','P3']
+    },
+    {
+      desc: "Server receives RELEASE. Queue: [P2, P3]. Server grants access to P2 (oldest request).",
+      nodes: { S:'coordinator', P1:'idle', P2:'cs', P3:'waiting' },
+      arrows: [{from:'S', to:'P2', label:'GRANT', color:'#ffd166'}],
+      flash: { S:'#ffd166', P2:'#ffd166' }, queue: ['P3']
+    },
+    {
+      desc: "P2 enters CS. P3 still waits. This guarantees FIFO ordering — ME3 satisfied!",
+      nodes: { S:'coordinator', P1:'idle', P2:'cs', P3:'waiting' },
+      arrows: [], flash: { P2:'#ffd166' }, queue: ['P3']
+    },
+  ];
+
+  return {
+    name: 'Central Server ME',
+    nodes, steps,
+    layout: 'star',
+    concepts: [
+      { title: 'Critical Section (CS)', text: 'A region only one process may execute at a time.' },
+      { title: 'REQUEST TOKEN', text: 'Process asks server for permission to enter CS.' },
+      { title: 'GRANT TOKEN', text: 'Server approves — process may enter CS.' },
+      { title: 'RELEASE TOKEN', text: 'Process tells server it has exited CS.' },
+      { title: 'Queue', text: 'Server queues pending requests, serves FIFO.' },
+      { title: 'Cost', text: 'Only 3 messages per entry/exit. Simple but server = single point of failure.' },
+    ],
+    legend: [
+      { color: '#ffd166', label: 'Coordinator / In CS' },
+      { color: '#00f5c4', label: 'Requesting' },
+      { color: '#a78bfa', label: 'Queued / Waiting' },
+      { color: '#ff4d6d', label: 'Releasing' },
+      { color: '#5a5a7a', label: 'Idle' },
+    ]
+  };
+}
+
+// ─────────────────────────────────────────────
+//  TOKEN RING ME
+// ─────────────────────────────────────────────
+function tokenRingSim() {
+  const nodes = [
+    { id: 'P1', label: 'P1', x:0, y:0 },
+    { id: 'P2', label: 'P2', x:0, y:0 },
+    { id: 'P3', label: 'P3', x:0, y:0 },
+    { id: 'P4', label: 'P4', x:0, y:0 },
+    { id: 'P5', label: 'P5', x:0, y:0 },
+  ];
+
+  const steps = [
+    {
+      desc: "Ring topology for Mutual Exclusion. A single TOKEN circulates continuously. Holder of token may enter CS.",
+      nodes: { P1:'idle', P2:'idle', P3:'idle', P4:'idle', P5:'idle' },
+      arrows: [], flash: {}, tokenAt: 'P1'
+    },
+    {
+      desc: "P1 holds the token but doesn't need CS. It passes the token to P2.",
+      nodes: { P1:'idle', P2:'idle', P3:'idle', P4:'idle', P5:'idle' },
+      arrows: [{from:'P1', to:'P2', label:'TOKEN', color:'#ffd166'}],
+      flash: { P1:'#ffd166' }, tokenAt: 'P2'
+    },
+    {
+      desc: "P2 wants to enter the CS! It receives the token and retains it — enters Critical Section.",
+      nodes: { P1:'idle', P2:'cs', P3:'idle', P4:'idle', P5:'idle' },
+      arrows: [], flash: { P2:'#ffd166' }, tokenAt: 'P2'
+    },
+    {
+      desc: "Meanwhile P4 and P5 also want CS access. They must wait — token is with P2.",
+      nodes: { P1:'idle', P2:'cs', P3:'idle', P4:'waiting', P5:'waiting' },
+      arrows: [], flash: { P4:'#a78bfa', P5:'#a78bfa' }, tokenAt: 'P2'
+    },
+    {
+      desc: "P2 finishes in CS and releases the token by passing it to P3.",
+      nodes: { P1:'idle', P2:'idle', P3:'idle', P4:'waiting', P5:'waiting' },
+      arrows: [{from:'P2', to:'P3', label:'TOKEN', color:'#ffd166'}],
+      flash: { P2:'#ff4d6d' }, tokenAt: 'P3'
+    },
+    {
+      desc: "P3 doesn't need CS. It passes the token straight to P4.",
+      nodes: { P1:'idle', P2:'idle', P3:'idle', P4:'waiting', P5:'waiting' },
+      arrows: [{from:'P3', to:'P4', label:'TOKEN', color:'#ffd166'}],
+      flash: { P3:'#00f5c4' }, tokenAt: 'P4'
+    },
+    {
+      desc: "P4 receives the token and was waiting — P4 enters the Critical Section!",
+      nodes: { P1:'idle', P2:'idle', P3:'idle', P4:'cs', P5:'waiting' },
+      arrows: [], flash: { P4:'#ffd166' }, tokenAt: 'P4'
+    },
+    {
+      desc: "P4 exits CS, passes token to P5. P5 was also waiting — it enters CS immediately.",
+      nodes: { P1:'idle', P2:'idle', P3:'idle', P4:'idle', P5:'cs' },
+      arrows: [{from:'P4', to:'P5', label:'TOKEN', color:'#ffd166'}],
+      flash: { P4:'#ff4d6d', P5:'#ffd166' }, tokenAt: 'P5'
+    },
+    {
+      desc: "P5 exits. Token continues around ring back to P1. Cycle repeats indefinitely.",
+      nodes: { P1:'idle', P2:'idle', P3:'idle', P4:'idle', P5:'idle' },
+      arrows: [{from:'P5', to:'P1', label:'TOKEN', color:'#ffd166'}],
+      flash: { P5:'#ff4d6d' }, tokenAt: 'P1'
+    },
+  ];
+
+  return {
+    name: 'Token Ring ME',
+    nodes, steps,
+    layout: 'ring',
+    concepts: [
+      { title: 'Token', text: 'A special message. Only the process holding the token may enter CS.' },
+      { title: 'Pass token', text: 'If you don\'t need CS, forward token to next neighbor immediately.' },
+      { title: 'Retain token', text: 'If you need CS, hold the token, enter CS, then release.' },
+      { title: 'Delay', text: '1 to N message times — depends on where token is in the ring.' },
+      { title: 'Problem', text: 'Token loss (process crash) stalls entire ring. No causal ordering.' },
+    ],
+    legend: [
+      { color: '#ffd166', label: 'Holds Token / In CS' },
+      { color: '#a78bfa', label: 'Waiting for token' },
+      { color: '#ff4d6d', label: 'Releasing token' },
+      { color: '#00f5c4', label: 'Forwarding token' },
+      { color: '#5a5a7a', label: 'Idle' },
+    ]
+  };
+}
+
+// ─────────────────────────────────────────────
+//  RICART-AGRAWALA
+// ─────────────────────────────────────────────
+function ricartSim() {
+  const nodes = [
+    { id: 'P1', label: 'P1\nT=8',  x:0, y:0 },
+    { id: 'P2', label: 'P2\nT=12', x:0, y:0 },
+    { id: 'P3', label: 'P3',        x:0, y:0 },
+  ];
+
+  const steps = [
+    {
+      desc: "Three processes. P1 and P2 both want to enter the CS at nearly the same time. P3 is idle.",
+      nodes: { P1:'idle', P2:'idle', P3:'idle' },
+      arrows: [], flash: {}
+    },
+    {
+      desc: "P1 multicasts REQUEST(T=8, P1) to ALL other processes. P2 multicasts REQUEST(T=12, P2) to all.",
+      nodes: { P1:'active', P2:'active', P3:'idle' },
+      arrows: [
+        {from:'P1', to:'P2', label:'REQ(8,P1)', color:'#00f5c4'},
+        {from:'P1', to:'P3', label:'REQ(8,P1)', color:'#00f5c4'},
+        {from:'P2', to:'P1', label:'REQ(12,P2)', color:'#a78bfa'},
+        {from:'P2', to:'P3', label:'REQ(12,P2)', color:'#a78bfa'},
+      ],
+      flash: { P1:'#00f5c4', P2:'#a78bfa' }
+    },
+    {
+      desc: "P3 receives both requests. P3 is not in CS and doesn't want it → replies OK to both immediately.",
+      nodes: { P1:'waiting', P2:'waiting', P3:'active' },
+      arrows: [
+        {from:'P3', to:'P1', label:'OK', color:'#ffd166'},
+        {from:'P3', to:'P2', label:'OK', color:'#ffd166'},
+      ],
+      flash: { P3:'#ffd166' }
+    },
+    {
+      desc: "P1 receives REQUEST(T=12, P2). P1 compares: its own timestamp T=8 < T=12. P1's request is OLDER → defer reply to P2.",
+      nodes: { P1:'active', P2:'waiting', P3:'idle' },
+      arrows: [],
+      flash: { P1:'#00f5c4', P2:'#a78bfa' },
+      note: "P1 DEFERS reply to P2 (queues it)"
+    },
+    {
+      desc: "P2 receives REQUEST(T=8, P1). P2 compares: T=8 < T=12, so P1 has priority. P2 replies OK to P1 immediately.",
+      nodes: { P1:'waiting', P2:'active', P3:'idle' },
+      arrows: [
+        {from:'P2', to:'P1', label:'OK', color:'#ffd166'},
+      ],
+      flash: { P2:'#ffd166' }
+    },
+    {
+      desc: "P1 has received OK from both P2 and P3 (N-1 = 2 replies). P1 enters the Critical Section!",
+      nodes: { P1:'cs', P2:'waiting', P3:'idle' },
+      arrows: [],
+      flash: { P1:'#ffd166' }
+    },
+    {
+      desc: "P1 exits the CS. It now sends the deferred OK reply to P2.",
+      nodes: { P1:'idle', P2:'waiting', P3:'idle' },
+      arrows: [
+        {from:'P1', to:'P2', label:'OK (deferred)', color:'#ffd166'},
+      ],
+      flash: { P1:'#ff4d6d', P2:'#00f5c4' }
+    },
+    {
+      desc: "P2 now has received OK from P1 and P3 (N-1 = 2 replies). P2 enters the Critical Section!",
+      nodes: { P1:'idle', P2:'cs', P3:'idle' },
+      arrows: [],
+      flash: { P2:'#ffd166' }
+    },
+  ];
+
+  return {
+    name: 'Ricart-Agrawala',
+    nodes, steps,
+    layout: 'triangle',
+    concepts: [
+      { title: 'Lamport Timestamps', text: 'Each request carries a logical clock value for ordering.' },
+      { title: 'Multicast REQUEST', text: 'Broadcast to ALL N-1 other processes when wanting CS.' },
+      { title: 'Reply rule', text: 'Reply OK if: not in CS and not wanting CS, OR your timestamp is higher (you lose).' },
+      { title: 'Defer rule', text: 'If in CS or your timestamp is lower (you win), queue the reply.' },
+      { title: 'Entry condition', text: 'Enter only after receiving N-1 OK replies from all others.' },
+      { title: 'Cost', text: '2(N-1) messages per entry. Fails if any process crashes.' },
+    ],
+    legend: [
+      { color: '#ffd166', label: 'In CS / Replying OK' },
+      { color: '#00f5c4', label: 'Requesting (lower T)' },
+      { color: '#a78bfa', label: 'Requesting (higher T)' },
+      { color: '#ff4d6d', label: 'Exiting / Deferred' },
+      { color: '#5a5a7a', label: 'Idle' },
+    ]
+  };
+}
+
+// ─────────────────────────────────────────────
+//  LAYOUT HELPERS
+// ─────────────────────────────────────────────
+function layoutNodes(sim) {
+  const n = sim.nodes;
+  const cx = W / 2, cy = H / 2;
+  const r = Math.min(W, H) * 0.32;
+
+  if (sim.layout === 'ring') {
+    n.forEach((nd, i) => {
+      const angle = (i / n.length) * Math.PI * 2 - Math.PI / 2;
+      nd.x = cx + Math.cos(angle) * r;
+      nd.y = cy + Math.sin(angle) * r;
+    });
+  } else if (sim.layout === 'scatter') {
+    // bully: spread them out
+    const positions = [
+      [0.2, 0.75], [0.35, 0.25], [0.5, 0.75], [0.7, 0.3], [0.8, 0.65]
+    ];
+    n.forEach((nd, i) => {
+      nd.x = W * positions[i][0];
+      nd.y = H * positions[i][1];
+    });
+  } else if (sim.layout === 'star') {
+    n[0].x = cx; n[0].y = cy; // server center
+    const sr = Math.min(W,H)*0.3;
+    for (let i = 1; i < n.length; i++) {
+      const angle = ((i-1) / (n.length-1)) * Math.PI * 2 - Math.PI/2;
+      n[i].x = cx + Math.cos(angle) * sr;
+      n[i].y = cy + Math.sin(angle) * sr;
+    }
+  } else if (sim.layout === 'triangle') {
+    const pts = [[0.5, 0.18], [0.18, 0.78], [0.82, 0.78]];
+    n.forEach((nd, i) => { nd.x = W*pts[i][0]; nd.y = H*pts[i][1]; });
+  }
+}
+
+// ─────────────────────────────────────────────
+//  DRAW EVERYTHING
+// ─────────────────────────────────────────────
+let currentSim = null;
+let currentStepData = null;
+
+function draw() {
+  if (!currentSim) return;
+  ctx.clearRect(0, 0, W, H);
+
+  layoutNodes(currentSim);
+
+  // Draw ring connections if ring layout
+  if (currentSim.layout === 'ring') {
+    const n = currentSim.nodes;
+    ctx.strokeStyle = '#1e1e3a';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 6]);
+    n.forEach((nd, i) => {
+      const next = n[(i + 1) % n.length];
+      ctx.beginPath();
+      ctx.moveTo(nd.x, nd.y);
+      ctx.lineTo(next.x, next.y);
+      ctx.stroke();
+    });
+    ctx.setLineDash([]);
+  }
+
+  if (!currentStepData) return;
+
+  // Draw arrows
+  (currentStepData.arrows || []).forEach(arr => {
+    const from = currentSim.nodes.find(n => n.id === arr.from);
+    const to   = currentSim.nodes.find(n => n.id === arr.to);
+    if (!from || !to) return;
+    drawArrow(from.x, from.y, to.x, to.y, arr.label, arr.color);
+  });
+
+  // Draw nodes
+  currentSim.nodes.forEach(nd => {
+    const state = (currentStepData.nodes || {})[nd.id] || 'idle';
+    const flash = (currentStepData.flash || {})[nd.id];
+    drawNode(nd.x, nd.y, nd.label, state, flash, nd.isServer);
+  });
+
+  // Draw queue if central server
+  if (currentStepData.queue !== undefined) {
+    drawQueue(currentStepData.queue);
+  }
+}
+
+function drawNode(x, y, label, state, flashColor, isServer) {
+  const R = isServer ? 32 : 26;
+  let fill = '#1e1e3a';
+  let stroke = '#2a2a4a';
+  let textColor = '#5a5a7a';
+
+  if (state === 'coordinator') { fill = '#2a2010'; stroke = '#ffd166'; textColor = '#ffd166'; }
+  else if (state === 'winner')  { fill = '#2a2010'; stroke = '#ffd166'; textColor = '#ffd166'; }
+  else if (state === 'active')  { fill = '#0a1a15'; stroke = '#00f5c4'; textColor = '#00f5c4'; }
+  else if (state === 'cs')      { fill = '#1a1a05'; stroke = '#ffd166'; textColor = '#ffd166'; }
+  else if (state === 'waiting') { fill = '#12082a'; stroke = '#a78bfa'; textColor = '#a78bfa'; }
+  else if (state === 'crashed') { fill = '#1a0508'; stroke = '#3a1020'; textColor = '#3a1020'; }
+  else if (state === 'idle')    { fill = '#111120'; stroke = '#2a2a4a'; textColor = '#5a5a7a'; }
+
+  if (flashColor) {
+    stroke = flashColor;
+    ctx.shadowColor = flashColor;
+    ctx.shadowBlur = 18;
+  }
+
+  ctx.beginPath();
+  if (isServer) {
+    ctx.roundRect(x - R, y - R, R*2, R*2, 6);
+  } else {
+    ctx.arc(x, y, R, 0, Math.PI * 2);
+  }
+  ctx.fillStyle = fill;
+  ctx.fill();
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Label
+  ctx.fillStyle = textColor;
+  ctx.font = `bold 11px 'Space Mono', monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const lines = label.split('\n');
+  if (lines.length > 1) {
+    lines.forEach((l, i) => ctx.fillText(l, x, y + (i - (lines.length-1)/2)*13));
+  } else {
+    ctx.fillText(label, x, y);
+  }
+
+  // State badge
+  if (state === 'cs') {
+    ctx.fillStyle = '#ffd166';
+    ctx.font = `bold 9px 'Space Mono'`;
+    ctx.fillText('IN CS', x, y + R + 13);
+  } else if (state === 'coordinator') {
+    ctx.fillStyle = '#ffd166';
+    ctx.font = `bold 9px 'Space Mono'`;
+    ctx.fillText('COORD', x, y + R + 13);
+  } else if (state === 'crashed') {
+    ctx.fillStyle = '#ff4d6d';
+    ctx.font = `bold 9px 'Space Mono'`;
+    ctx.fillText('CRASHED', x, y + R + 13);
+  } else if (state === 'waiting') {
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = `bold 9px 'Space Mono'`;
+    ctx.fillText('WAITING', x, y + R + 13);
+  }
+}
+
+function drawArrow(x1, y1, x2, y2, label, color) {
+  const R = 28;
+  const dx = x2 - x1, dy = y2 - y1;
+  const dist = Math.sqrt(dx*dx + dy*dy);
+  const ux = dx/dist, uy = dy/dist;
+
+  // offset start/end by node radius
+  const sx = x1 + ux * R, sy = y1 + uy * R;
+  const ex = x2 - ux * R, ey = y2 - uy * R;
+
+  // slight curve
+  const mx = (sx + ex) / 2 - uy * 20;
+  const my = (sy + ey) / 2 + ux * 20;
+
+  ctx.beginPath();
+  ctx.moveTo(sx, sy);
+  ctx.quadraticCurveTo(mx, my, ex, ey);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 8;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Arrowhead
+  const angle = Math.atan2(ey - my, ex - mx);
+  ctx.save();
+  ctx.translate(ex, ey);
+  ctx.rotate(angle);
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(-10, -5);
+  ctx.lineTo(-10, 5);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.restore();
+
+  // Label
+  if (label) {
+    const lx = (sx + ex) / 2 - uy * 28;
+    const ly = (sy + ey) / 2 + ux * 28;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(lx - 32, ly - 9, 64, 18);
+    ctx.fillStyle = color;
+    ctx.font = `bold 9px 'Space Mono', monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, lx, ly);
+  }
+}
+
+function drawQueue(queue) {
+  if (!queue.length) return;
+  const x = W - 120, y = 20;
+  ctx.fillStyle = '#111118';
+  ctx.strokeStyle = '#a78bfa';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(x, y, 110, 20 + queue.length * 22, 4);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = '#a78bfa';
+  ctx.font = `bold 9px 'Space Mono'`;
+  ctx.textAlign = 'left';
+  ctx.fillText('SERVER QUEUE', x + 8, y + 13);
+  queue.forEach((q, i) => {
+    ctx.fillStyle = '#00f5c4';
+    ctx.fillText(`▸ ${q}`, x + 14, y + 13 + (i+1)*22);
+  });
+}
+
+// ─────────────────────────────────────────────
+//  STEP MANAGEMENT
+// ─────────────────────────────────────────────
+function goToStep(idx) {
+  if (!currentSim) return;
+  const steps = currentSim.steps;
+  if (idx < 0 || idx >= steps.length) return;
+  stepIndex = idx;
+  currentStepData = steps[idx];
+  draw();
+  updateLog();
+  updateUI();
+}
+
+function nextStep() {
+  if (stepIndex < currentSim.steps.length - 1) goToStep(stepIndex + 1);
+  else stopPlay();
+}
+
+function prevStep() { goToStep(stepIndex - 1); }
+
+function resetSim() {
+  stopPlay();
+  stepIndex = 0;
+  goToStep(0);
+}
+
+function togglePlay() {
+  if (playing) stopPlay();
+  else startPlay();
+}
+
+function startPlay() {
+  playing = true;
+  document.getElementById('playBtn').textContent = '⏸ PAUSE';
+  playTimer = setInterval(() => {
+    if (stepIndex >= currentSim.steps.length - 1) { stopPlay(); return; }
+    nextStep();
+  }, speed);
+}
+
+function stopPlay() {
+  playing = false;
+  document.getElementById('playBtn').textContent = '▶ PLAY';
+  clearInterval(playTimer);
+}
+
+function updateSpeed() {
+  speed = parseInt(document.getElementById('speedSlider').value);
+  if (playing) { stopPlay(); startPlay(); }
+}
+
+// ─────────────────────────────────────────────
+//  UI UPDATES
+// ─────────────────────────────────────────────
+function updateLog() {
+  const log = document.getElementById('log');
+  const steps = currentSim.steps;
+  log.innerHTML = steps.map((s, i) => `
+    <div class="log-entry ${i === stepIndex ? 'active' : ''}">
+      <span class="step-num">${String(i+1).padStart(2,'0')}</span>${s.desc}
+    </div>
+  `).join('');
+  const active = log.querySelector('.active');
+  if (active) active.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function updateUI() {
+  const n = currentSim.steps.length;
+  document.getElementById('stepCounter').textContent = `Step ${stepIndex + 1} / ${n}`;
+  document.getElementById('progress').style.width = `${((stepIndex+1)/n)*100}%`;
+  document.getElementById('prevBtn').disabled = stepIndex === 0;
+  document.getElementById('nextBtn').disabled = stepIndex === n - 1;
+}
+
+function updateSidebar() {
+  const sim = currentSim;
+  const cards = document.getElementById('concept-cards');
+  cards.innerHTML = (sim.concepts || []).map((c, i) => `
+    <div class="concept-card" id="cc${i}">
+      <h3>${c.title}</h3>
+      <p>${c.text}</p>
+    </div>
+  `).join('');
+
+  const leg = document.getElementById('legend');
+  leg.innerHTML = `<h2 style="margin-top:1rem">Legend</h2>` +
+    (sim.legend || []).map(l => `
+      <div class="legend-item">
+        <div class="legend-dot" style="background:${l.color};box-shadow:0 0 6px ${l.color}66"></div>
+        ${l.label}
+      </div>
+    `).join('');
+}
+
+// ─────────────────────────────────────────────
+//  TAB SWITCHING
+// ─────────────────────────────────────────────
+function switchTab(idx) {
+  stopPlay();
+  currentTab = idx;
+  document.querySelectorAll('nav button').forEach((b, i) => b.classList.toggle('active', i === idx));
+  currentSim = TABS[idx]();
+  stepIndex = 0;
+  currentStepData = currentSim.steps[0];
+  updateSidebar();
+  updateLog();
+  updateUI();
+  draw();
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+window.addEventListener('load', () => {
+  resize();
+  switchTab(0);
+});
+</script>
+</body>
+</html>
