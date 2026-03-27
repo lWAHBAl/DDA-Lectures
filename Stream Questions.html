@@ -1,0 +1,1559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Processing Quiz</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f1117;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1a1d2e, #2d1b69);
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom: 2px solid #4a3fa0;
+            box-shadow: 0 4px 20px rgba(74, 63, 160, 0.4);
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            color: #a78bfa;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        header p {
+            color: #9ca3af;
+            margin-top: 8px;
+            font-size: 0.95rem;
+        }
+
+        nav {
+            background: #1a1d2e;
+            padding: 15px 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            border-bottom: 1px solid #2d2f45;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav a {
+            color: #a78bfa;
+            text-decoration: none;
+            padding: 7px 15px;
+            border-radius: 20px;
+            border: 1px solid #4a3fa0;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        nav a:hover {
+            background: #4a3fa0;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .lecture-section {
+            margin-bottom: 60px;
+            background: #1a1d2e;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #2d2f45;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+        }
+
+        .lecture-header {
+            background: linear-gradient(135deg, #2d1b69, #1e3a5f);
+            padding: 20px 25px;
+            border-bottom: 2px solid #4a3fa0;
+        }
+
+        .lecture-header h2 {
+            color: #a78bfa;
+            font-size: 1.3rem;
+            letter-spacing: 1px;
+        }
+
+        .lecture-header p {
+            color: #7c83a0;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+
+        .questions-container {
+            padding: 20px 25px;
+        }
+
+        .question-card {
+            background: #12141f;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #2d2f45;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+
+        .question-card:hover {
+            border-color: #4a3fa0;
+        }
+
+        .question-header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .question-number {
+            background: #4a3fa0;
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .question-text {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #d1d5db;
+            font-weight: 500;
+        }
+
+        .options-container {
+            padding: 0 20px 16px 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .option-btn {
+            background: #1e2235;
+            border: 1px solid #2d2f45;
+            color: #c4c9d8;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 0.88rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: #252840;
+            border-color: #5b4fd0;
+            color: #e0e0e0;
+        }
+
+        .option-btn .option-letter {
+            background: #2d2f45;
+            color: #a78bfa;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .option-btn.correct {
+            background: #0d2d1a;
+            border-color: #22c55e;
+            color: #86efac;
+        }
+
+        .option-btn.correct .option-letter {
+            background: #22c55e;
+            color: #fff;
+        }
+
+        .option-btn.wrong {
+            background: #2d0d0d;
+            border-color: #ef4444;
+            color: #fca5a5;
+        }
+
+        .option-btn.wrong .option-letter {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .option-btn.reveal-correct {
+            background: #0d2d1a;
+            border-color: #22c55e;
+            color: #86efac;
+        }
+
+        .option-btn.reveal-correct .option-letter {
+            background: #22c55e;
+            color: #fff;
+        }
+
+        .option-btn:disabled {
+            cursor: default;
+        }
+
+        .feedback {
+            margin: 0 20px 16px 60px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            line-height: 1.6;
+            display: none;
+        }
+
+        .feedback.correct-feedback {
+            background: #0d2d1a;
+            border: 1px solid #22c55e;
+            color: #86efac;
+        }
+
+        .feedback.wrong-feedback {
+            background: #2d0d0d;
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+        }
+
+        .feedback .feedback-title {
+            font-weight: bold;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .feedback .explanation {
+            color: #9ca3af;
+            margin-top: 6px;
+            font-size: 0.85rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 6px;
+        }
+
+        .progress-bar-container {
+            padding: 15px 25px;
+            background: #12141f;
+            border-top: 1px solid #2d2f45;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.82rem;
+            color: #7c83a0;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: #2d2f45;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4a3fa0, #a78bfa);
+            border-radius: 3px;
+            transition: width 0.4s ease;
+            width: 0%;
+        }
+
+        .score-display {
+            display: flex;
+            gap: 20px;
+            padding: 15px 25px;
+            background: #0f1117;
+            border-top: 1px solid #2d2f45;
+        }
+
+        .score-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+
+        .score-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .score-dot.correct-dot { background: #22c55e; }
+        .score-dot.wrong-dot { background: #ef4444; }
+        .score-dot.pending-dot { background: #4a3fa0; }
+
+        .reset-btn {
+            margin: 15px 25px;
+            padding: 8px 20px;
+            background: transparent;
+            border: 1px solid #4a3fa0;
+            color: #a78bfa;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            transition: all 0.3s ease;
+        }
+
+        .reset-btn:hover {
+            background: #4a3fa0;
+            color: #fff;
+        }
+
+        .global-stats {
+            background: #1a1d2e;
+            border: 1px solid #2d2f45;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .global-stats h3 {
+            color: #a78bfa;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-box {
+            background: #12141f;
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid #2d2f45;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #a78bfa;
+        }
+
+        .stat-label {
+            font-size: 0.78rem;
+            color: #7c83a0;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 600px) {
+            header h1 { font-size: 1.5rem; }
+            .options-container { padding-left: 20px; }
+            .feedback { margin-left: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>⚡ Stream Processing Quiz</h1>
+    <p>Test your knowledge across all 5 lectures</p>
+</header>
+
+<nav>
+    <a href="#lecture1">Lecture 1: Introduction</a>
+    <a href="#lecture2">Lecture 2: Lifecycle & Windowing</a>
+    <a href="#lecture3">Lecture 3: Spark Evolution</a>
+    <a href="#lecture4">Lecture 4: Spark Streaming</a>
+    <a href="#lecture5">Lecture 5: Apache Storm</a>
+</nav>
+
+<div class="container">
+
+    <div class="global-stats">
+        <h3>📊 Overall Progress</h3>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-number" id="total-answered">0</div>
+                <div class="stat-label">Answered</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="total-correct" style="color:#22c55e">0</div>
+                <div class="stat-label">Correct</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="total-wrong" style="color:#ef4444">0</div>
+                <div class="stat-label">Wrong</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="total-percent">0%</div>
+                <div class="stat-label">Accuracy</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LECTURE 1 -->
+    <div class="lecture-section" id="lecture1">
+        <div class="lecture-header">
+            <h2>📘 Lecture 1: Introduction to Stream Processing</h2>
+            <p>30 Questions • Fundamentals of stream processing concepts</p>
+        </div>
+        <div class="questions-container" id="questions-lecture1"></div>
+        <div class="progress-bar-container">
+            <div class="progress-info">
+                <span>Progress</span>
+                <span id="progress-text-lecture1">0 / 30</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill-lecture1"></div></div>
+        </div>
+        <div class="score-display">
+            <div class="score-item"><div class="score-dot correct-dot"></div><span id="correct-count-lecture1">0 Correct</span></div>
+            <div class="score-item"><div class="score-dot wrong-dot"></div><span id="wrong-count-lecture1">0 Wrong</span></div>
+            <div class="score-item"><div class="score-dot pending-dot"></div><span id="pending-count-lecture1">30 Remaining</span></div>
+        </div>
+        <button class="reset-btn" onclick="resetLecture('lecture1')">↺ Reset Lecture 1</button>
+    </div>
+
+    <!-- LECTURE 2 -->
+    <div class="lecture-section" id="lecture2">
+        <div class="lecture-header">
+            <h2>📗 Lecture 2: Streaming Data Lifecycle and Windowing</h2>
+            <p>30 Questions • Lifecycle stages, windowing types, and state management</p>
+        </div>
+        <div class="questions-container" id="questions-lecture2"></div>
+        <div class="progress-bar-container">
+            <div class="progress-info">
+                <span>Progress</span>
+                <span id="progress-text-lecture2">0 / 30</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill-lecture2"></div></div>
+        </div>
+        <div class="score-display">
+            <div class="score-item"><div class="score-dot correct-dot"></div><span id="correct-count-lecture2">0 Correct</span></div>
+            <div class="score-item"><div class="score-dot wrong-dot"></div><span id="wrong-count-lecture2">0 Wrong</span></div>
+            <div class="score-item"><div class="score-dot pending-dot"></div><span id="pending-count-lecture2">30 Remaining</span></div>
+        </div>
+        <button class="reset-btn" onclick="resetLecture('lecture2')">↺ Reset Lecture 2</button>
+    </div>
+
+    <!-- LECTURE 3 -->
+    <div class="lecture-section" id="lecture3">
+        <div class="lecture-header">
+            <h2>📙 Lecture 3: Spark's Motivation and Evolution</h2>
+            <p>30 Questions • Hadoop limitations, Spark's in-memory model, and RDDs</p>
+        </div>
+        <div class="questions-container" id="questions-lecture3"></div>
+        <div class="progress-bar-container">
+            <div class="progress-info">
+                <span>Progress</span>
+                <span id="progress-text-lecture3">0 / 30</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill-lecture3"></div></div>
+        </div>
+        <div class="score-display">
+            <div class="score-item"><div class="score-dot correct-dot"></div><span id="correct-count-lecture3">0 Correct</span></div>
+            <div class="score-item"><div class="score-dot wrong-dot"></div><span id="wrong-count-lecture3">0 Wrong</span></div>
+            <div class="score-item"><div class="score-dot pending-dot"></div><span id="pending-count-lecture3">30 Remaining</span></div>
+        </div>
+        <button class="reset-btn" onclick="resetLecture('lecture3')">↺ Reset Lecture 3</button>
+    </div>
+
+    <!-- LECTURE 4 -->
+    <div class="lecture-section" id="lecture4">
+        <div class="lecture-header">
+            <h2>📕 Lecture 4: Spark Streaming Fundamentals</h2>
+            <p>30 Questions • DStreams, fault tolerance, and streaming operations</p>
+        </div>
+        <div class="questions-container" id="questions-lecture4"></div>
+        <div class="progress-bar-container">
+            <div class="progress-info">
+                <span>Progress</span>
+                <span id="progress-text-lecture4">0 / 30</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill-lecture4"></div></div>
+        </div>
+        <div class="score-display">
+            <div class="score-item"><div class="score-dot correct-dot"></div><span id="correct-count-lecture4">0 Correct</span></div>
+            <div class="score-item"><div class="score-dot wrong-dot"></div><span id="wrong-count-lecture4">0 Wrong</span></div>
+            <div class="score-item"><div class="score-dot pending-dot"></div><span id="pending-count-lecture4">30 Remaining</span></div>
+        </div>
+        <button class="reset-btn" onclick="resetLecture('lecture4')">↺ Reset Lecture 4</button>
+    </div>
+
+    <!-- LECTURE 5 -->
+    <div class="lecture-section" id="lecture5">
+        <div class="lecture-header">
+            <h2>📓 Lecture 5: Apache Storm</h2>
+            <p>30 Questions • Storm architecture, topologies, and stream groupings</p>
+        </div>
+        <div class="questions-container" id="questions-lecture5"></div>
+        <div class="progress-bar-container">
+            <div class="progress-info">
+                <span>Progress</span>
+                <span id="progress-text-lecture5">0 / 30</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill-lecture5"></div></div>
+        </div>
+        <div class="score-display">
+            <div class="score-item"><div class="score-dot correct-dot"></div><span id="correct-count-lecture5">0 Correct</span></div>
+            <div class="score-item"><div class="score-dot wrong-dot"></div><span id="wrong-count-lecture5">0 Wrong</span></div>
+            <div class="score-item"><div class="score-dot pending-dot"></div><span id="pending-count-lecture5">30 Remaining</span></div>
+        </div>
+        <button class="reset-btn" onclick="resetLecture('lecture5')">↺ Reset Lecture 5</button>
+    </div>
+
+</div>
+
+<script>
+const quizData = {
+    lecture1: [
+        {
+            q: "What is the fundamental difference between batch processing and stream processing?",
+            options: ["Batch processing is faster than stream processing.", "Batch processing collects data first and analyzes it later, while stream processing analyzes data as it is generated.", "Batch processing is used for IoT, while stream processing is used for sales reports.", "There is no difference; they are the same."],
+            answer: 1,
+            explanation: "Batch processing accumulates data over a period and processes it all at once (e.g., nightly reports), while stream processing continuously analyzes data the moment it is generated, enabling real-time insights."
+        },
+        {
+            q: "What is a \"data stream\"?",
+            options: ["A finite dataset stored in a database.", "A sequence of events that is potentially infinite and generated continuously over time.", "A single file containing all log entries for a day.", "A type of data compression algorithm."],
+            answer: 1,
+            explanation: "A data stream is an unbounded, continuously generated sequence of events — unlike a file or database table, it has no definitive end."
+        },
+        {
+            q: "What are the three fundamental components of an event?",
+            options: ["ID, Name, Value", "Timestamp, Event Source, Payload", "Key, Value, Offset", "Header, Body, Footer"],
+            answer: 1,
+            explanation: "Every event consists of: a Timestamp (when it occurred), an Event Source (where it came from), and a Payload (the actual data content of the event)."
+        },
+        {
+            q: "In the context of traditional analytics, what does the \"T\" in ETL stand for, and what is its purpose?",
+            options: ["Transfer; to move data to a new location.", "Terminate; to end the data processing job.", "Transform; to clean and change the data into a suitable format.", "Time; to timestamp all incoming data."],
+            answer: 2,
+            explanation: "ETL stands for Extract, Transform, Load. The 'T' (Transform) step cleans, enriches, and reformats data so it is suitable for analysis and storage in a target system."
+        },
+        {
+            q: "Why is event immutability important in stream processing?",
+            options: ["It allows events to be deleted easily.", "It makes the system faster.", "It ensures data integrity and allows for easier debugging by replaying past events.", "It reduces the size of the events."],
+            answer: 2,
+            explanation: "Immutable events cannot be changed after creation, which guarantees data integrity. Because the record is fixed, you can replay the exact sequence of events to reproduce or debug past states."
+        },
+        {
+            q: "How does streaming data computation differ from static data computation?",
+            options: ["Static computation uses continuous queries, while streaming uses one-time queries.", "Static computation processes an unbounded data flow, while streaming processes a finite dataset.", "Static computation processes a finite, stored dataset with a one-time query, while streaming computation uses a continuous query on an unbounded data flow.", "There is no fundamental difference."],
+            answer: 2,
+            explanation: "Static (batch) computation runs a single query over a bounded, pre-stored dataset. Streaming computation runs a persistent, continuous query that processes new events as they arrive from an ever-growing, unbounded data flow."
+        },
+        {
+            q: "Which application *must* use stream processing instead of batch processing to be effective?",
+            options: ["Monthly sales report generation.", "Yearly tax calculation.", "Credit card fraud detection.", "Payroll processing."],
+            answer: 2,
+            explanation: "Fraud detection must happen in real-time — within milliseconds of a transaction — to block it before funds are transferred. Batch processing introduces too much delay for this use case."
+        },
+        {
+            q: "What is a primary disadvantage of using batch processing for monitoring server logs?",
+            options: ["It is too expensive.", "It introduces a delay between an error occurring and being detected, potentially causing prolonged downtime.", "It requires more storage space.", "It cannot process text data."],
+            answer: 1,
+            explanation: "With batch processing, logs are only analyzed periodically (e.g., every hour). An error that occurs just after a batch runs won't be detected until the next batch, causing prolonged downtime."
+        },
+        {
+            q: "What is the \"event time vs. processing time\" problem?",
+            options: ["The problem of deciding whether to use a timestamp from the event or the system clock.", "The discrepancy between when an event actually occurred and when the system processes it, which is crucial for handling late or out-of-order data.", "The difference between the time it takes to generate an event and the time to store it.", "A scheduling problem in the processing cluster."],
+            answer: 1,
+            explanation: "Event time is when something actually happened (recorded in the event). Processing time is when the system ingests it. Network delays cause these to differ, making it hard to correctly assign events to time windows."
+        },
+        {
+            q: "For a ride-sharing app, what is the primary event that triggers a driver assignment?",
+            options: ["The driver logging into the app.", "The user opening the app.", "The user requesting a ride (a \"ride_request\" event).", "The car's GPS location being updated."],
+            answer: 2,
+            explanation: "The ride_request event — fired when a user confirms they want a ride — is the specific business action that triggers the driver-matching pipeline in a ride-sharing system."
+        },
+        {
+            q: "What are the three main goals for using real-time data monitoring?",
+            options: ["Store, Process, Analyze", "Optimize, Prevent, Detect", "Read, Write, Update", "Extract, Transform, Load"],
+            answer: 1,
+            explanation: "Real-time monitoring is used to: Optimize (improve efficiency, e.g., personalize recommendations), Prevent (stop harmful actions before they occur, e.g., block fraud), and Detect (identify issues as they happen, e.g., system anomalies)."
+        },
+        {
+            q: "Why is a batch processing approach unsuitable for fraud detection?",
+            options: ["Batch processing is not secure.", "By the time the batch job runs and identifies a fraudulent transaction, the transaction would have already been completed and the funds lost.", "Batch processing cannot handle financial data.", "It is too expensive to use for fraud detection."],
+            answer: 1,
+            explanation: "Fraud detection has a very narrow window of opportunity — the transaction must be flagged before it completes. Batch jobs run periodically (e.g., daily), so any fraudulent transaction would already be finalized by the time it's detected."
+        },
+        {
+            q: "How can streaming be used for \"clickstream analytics\" on an e-commerce website?",
+            options: ["By storing all clicks in a database for end-of-month analysis.", "By analyzing a user's sequence of clicks in real-time to personalize recommendations or detect drop-off points.", "By sending click data to a printer.", "By using clicks to design the website's layout."],
+            answer: 1,
+            explanation: "Clickstream analytics in real-time allows the system to understand a user's current intent (e.g., browsing shoes) and immediately show relevant recommendations or spot where users are abandoning their shopping journey."
+        },
+        {
+            q: "What is the difference between an \"Action-Based Event\" and a \"State-Change Event\"?",
+            options: ["Action-based events are manual, state-change events are automatic.", "Action-based events represent a user action (e.g., \"ATM withdrawal\"), while state-change events represent a change in system state (e.g., \"Account balance changes\").", "Action-based events are small, state-change events are large.", "There is no difference."],
+            answer: 1,
+            explanation: "Action-based events are triggered by deliberate user or system actions (e.g., a button click, a withdrawal). State-change events record that some value in the system has transitioned from one state to another (e.g., order status going from 'pending' to 'shipped')."
+        },
+        {
+            q: "Why is a database row (like a current account balance) not considered an event by itself?",
+            options: ["It is too large to be an event.", "It represents a snapshot of current state, not a historical record of the change that led to that state.", "Databases cannot produce events.", "It contains multiple fields."],
+            answer: 1,
+            explanation: "A database row shows the current value (snapshot), not the history of how it got there. An event, by contrast, records the specific action or change that occurred — like 'deposited \$500 at 10:00 AM'. The row doesn't tell you why or how the balance changed."
+        },
+        {
+            q: "Why is calculating \"Trending Topics\" on a social media platform a streaming problem?",
+            options: ["Because the data is too large.", "Because it requires immediate and continuous recalculation to detect viral content as it happens, not hours later.", "Because it's a complex algorithm.", "Because it uses images."],
+            answer: 1,
+            explanation: "A topic can go viral in minutes. Detecting it requires continuously analyzing incoming posts in real-time. A batch approach running every few hours would miss the peak of the trend and fail to surface it while it's actually trending."
+        },
+        {
+            q: "What is the main disadvantage of batch processing in terms of user experience?",
+            options: ["It uses too much memory.", "It leads to delayed updates, meaning users do not get live notifications or instant feedback.", "It is difficult to code.", "It works only on mobile devices."],
+            answer: 1,
+            explanation: "Batch processing inherently introduces latency. Users won't see real-time notifications (like 'your package was just delivered') because results are only computed at scheduled intervals, degrading the interactive user experience."
+        },
+        {
+            q: "Why is \"latency sensitivity\" higher for a fraud detection system than for a monthly sales report?",
+            options: ["Fraud detection systems are smaller.", "Monthly sales reports are more important.", "For fraud detection, milliseconds can mean the difference between stopping a transaction or losing money, while a sales report is not time-critical.", "Sales reports require more data."],
+            answer: 2,
+            explanation: "Fraud detection is a time-critical action — a delay of even a second can be too late. A monthly sales report, on the other hand, is purely informational and its value doesn't diminish whether it's ready in 1 minute or 10 minutes."
+        },
+        {
+            q: "In a hospital ICU, why is a streaming system necessary for heart rate monitoring?",
+            options: ["To save on storage costs.", "An abnormal reading must trigger an alert instantly to allow for immediate medical intervention; any delay could risk patient safety.", "To comply with hospital regulations.", "To generate daily reports."],
+            answer: 1,
+            explanation: "In the ICU, a patient's condition can deteriorate within seconds. A streaming system continuously monitors vitals and fires an alert the instant an anomaly is detected, giving medical staff the chance to intervene immediately."
+        },
+        {
+            q: "What is the \"payload\" in an event?",
+            options: ["The timestamp of the event.", "The source of the event.", "The actual content or data of the event (e.g., user_id, order amount).", "The network protocol used to send the event."],
+            answer: 2,
+            explanation: "The payload is the 'body' or 'data' of the event — the specific information it carries. For a purchase event, the payload might include user_id, item_id, and amount. The timestamp and source are separate metadata fields."
+        },
+        {
+            q: "Which of the following is a common source of data streams?",
+            options: ["A printed report.", "A static CSV file on a hard drive.", "A bank's system generating credit card transactions.", "A backup tape."],
+            answer: 2,
+            explanation: "A bank's transaction system continuously generates new events (swipes, payments, transfers) in real-time — a classic unbounded data stream. A CSV file and backup tape are static, finite datasets."
+        },
+        {
+            q: "What is the difference in impact between a delayed result for an \"Optimize\" goal (e.g., a recommendation) vs. a \"Prevent\" goal (e.g., blocking a bot)?",
+            options: ["A delayed \"Optimize\" result leads to financial loss, while a delayed \"Prevent\" result leads to reduced efficiency.", "A delayed \"Optimize\" result leads to a lost opportunity (reduced efficiency), while a delayed \"Prevent\" result can lead to financial loss, legal risk, or system failure.", "There is no difference.", "\"Optimize\" results are more important."],
+            answer: 1,
+            explanation: "Missing an optimization opportunity (e.g., a slightly less relevant recommendation) is a minor inefficiency. Missing a prevention opportunity (e.g., failing to block a bot attack or a fraud attempt) can have severe consequences like financial loss or security breaches."
+        },
+        {
+            q: "Why is \"continuous processing\" a key characteristic of stream processing?",
+            options: ["Because the system runs for exactly one minute.", "Because the system never stops processing incoming events, providing ongoing results.", "Because it processes data in yearly batches.", "Because it requires a human to start it every time."],
+            answer: 1,
+            explanation: "Stream processing systems run indefinitely, processing every new event as it arrives without stopping. This continuity is what enables real-time results — the system is always 'on' and ready to react."
+        },
+        {
+            q: "How would a streaming system respond to a delivery truck deviating from its route, contrasting with a batch system?",
+            options: ["A batch system would alert the driver immediately; a streaming system would generate a report the next day.", "A streaming system would alert the driver or dispatcher immediately, while a batch system would only report the deviation the next day, long after the fact.", "Neither system can detect deviations.", "A streaming system would ignore it."],
+            answer: 1,
+            explanation: "A streaming system processes GPS events in real-time, so it can detect a deviation the instant it happens and trigger an immediate alert. A batch system would only analyze the route data in its next scheduled run, making the alert useless."
+        },
+        {
+            q: "What is the role of a \"watermark\" in stream processing?",
+            options: ["To indicate the end of a stream.", "To define the maximum allowed lateness for events, telling the system how long to wait for out-of-order or late data.", "To filter out unwanted data.", "To encrypt the data stream."],
+            answer: 1,
+            explanation: "A watermark is a progress marker in event-time processing. It signals that the system believes all events up to a certain event-time have arrived, and it's safe to close time windows and emit results for that period."
+        },
+        {
+            q: "For a brand monitoring Twitter sentiment, which component is part of the system?",
+            options: ["A printer to print all tweets.", "A stream processor to analyze tweets as they happen and a trigger for alerts on sentiment spikes.", "A database to store tweets for a monthly report.", "A manual process of reading tweets."],
+            answer: 1,
+            explanation: "A real-time brand monitoring system needs a stream processor that continuously analyzes incoming tweets for sentiment and triggers automated alerts when negative sentiment spikes — enabling immediate PR response."
+        },
+        {
+            q: "What does \"incremental computation\" mean in stream processing?",
+            options: ["Results are only computed at the end of the year.", "Results are updated step-by-step as new data arrives, rather than being recomputed from scratch each time.", "The system computes results in random order.", "The system only computes results when there is a large batch of data."],
+            answer: 1,
+            explanation: "Incremental computation means the system updates its running result (e.g., a count, average, or sum) with each new event, rather than reprocessing all historical data. This is efficient and provides continuously fresh results."
+        },
+        {
+            q: "Why does the order of events matter?",
+            options: ["Because it affects the final state (e.g., a deposit followed by a withdrawal results in a different intermediate balance than a withdrawal followed by a deposit).", "Because events are always processed in alphabetical order.", "Order does not matter in stream processing.", "Because events are stored in a list."],
+            answer: 0,
+            explanation: "Order is critical for correctness. Consider a bank account with \$100: 'deposit \$50 then withdraw \$200' results in an insufficient funds error, while 'withdraw \$200 then deposit \$50' results in a failed withdrawal. The sequence of events determines intermediate states and outcomes."
+        },
+        {
+            q: "Which is an example of a transformation operation in stream processing?",
+            options: ["Keeping only transactions over \$1000.", "Converting a temperature reading from Celsius to Fahrenheit.", "Calculating the average temperature per minute.", "Alerting a DevOps team of an error."],
+            answer: 1,
+            explanation: "A transformation changes the format or representation of data without filtering or aggregating. Converting Celsius to Fahrenheit (F = C × 9/5 + 32) is a pure one-to-one transformation. Option a is filtering, c is aggregation, and d is a side-effect/action."
+        },
+        {
+            q: "What are two types of events a streaming system for predictive maintenance would capture?",
+            options: ["Employee login events and coffee machine usage.", "Action-based: A machine completes a cycle. State-change: Machine temperature rises above a threshold.", "Website clicks and user reviews.", "Stock market prices and weather forecasts."],
+            answer: 1,
+            explanation: "Predictive maintenance relies on monitoring machine behavior. Action-based events (cycle completions) track usage patterns, while state-change events (temperature crossing a threshold) indicate potential failure conditions that can trigger maintenance alerts."
+        }
+    ],
+
+    lecture2: [
+        {
+            q: "What is the correct order of stages in a typical streaming data lifecycle?",
+            options: ["Output Storage -> Stream Processing -> Message Distribution -> Data Generation", "Data Generation -> Message Distribution -> Stream Processing -> Output Storage", "Stream Processing -> Data Generation -> Output Storage -> Message Distribution", "Message Distribution -> Data Generation -> Output Storage -> Stream Processing"],
+            answer: 1,
+            explanation: "The lifecycle flows logically: first data is Generated (by sensors, apps, etc.), then Distributed via a message broker (like Kafka), then Processed by a stream processor (like Flink), and finally stored in Output Storage (a database, dashboard, etc.)."
+        },
+        {
+            q: "What is the primary function of a Message Processor (like Kafka) in a streaming lifecycle?",
+            options: ["To perform complex calculations on data.", "To generate the initial data stream.", "To reliably receive, store temporarily, and distribute events to stream processors.", "To permanently store the final results."],
+            answer: 2,
+            explanation: "Message brokers like Kafka act as a durable buffer between producers (data generators) and consumers (stream processors). They decouple the two sides, handle backpressure, and guarantee reliable, ordered delivery."
+        },
+        {
+            q: "What is \"windowing\" in stream processing?",
+            options: ["A technique to physically close a window in a data center.", "A method to group an unbounded stream of events into finite chunks (based on time or count) for computation.", "A way to discard old data.", "A security feature for stream processing."],
+            answer: 1,
+            explanation: "Since a stream is infinite, you can't compute an aggregate over 'all events'. Windowing solves this by dividing the stream into bounded groups (e.g., 'events in the last 5 minutes') on which you can perform aggregations like count, sum, or average."
+        },
+        {
+            q: "What is a characteristic of a \"tumbling window\"?",
+            options: ["Windows overlap.", "Windows are fixed-size, non-overlapping intervals, and each event belongs to exactly one window.", "Windows are based on user activity.", "Windows are only used for financial data."],
+            answer: 1,
+            explanation: "Tumbling windows are like non-overlapping buckets. A 5-minute tumbling window creates a new bucket every 5 minutes: [0-5min], [5-10min], [10-15min]. Each event falls into exactly one bucket."
+        },
+        {
+            q: "How does a \"sliding window\" differ from a \"tumbling window\"?",
+            options: ["Sliding windows are smaller.", "Sliding windows are fixed-size but overlap, moving forward by a slide interval, so an event can belong to multiple windows.", "Tumbling windows are for real-time, sliding windows are for batch.", "There is no difference."],
+            answer: 1,
+            explanation: "A sliding window with length=10min and slide=5min creates windows like [0-10min], [5-15min], [10-20min]. Notice windows overlap — an event at 7 minutes belongs to both the first and second windows. This provides smoother, more frequently updated results."
+        },
+        {
+            q: "What defines when a \"session window\" closes?",
+            options: ["After a fixed amount of time, like 5 minutes.", "When a fixed number of events have been received.", "When there is a gap of inactivity exceeding a specified threshold.", "Session windows never close."],
+            answer: 2,
+            explanation: "Session windows are activity-driven. They group events that are close together in time (within the inactivity gap threshold) into a single session. If no new event arrives within the gap (e.g., 30 minutes), the session is considered ended and the window closes."
+        },
+        {
+            q: "What is the critical difference between \"event time\" and \"processing time\"?",
+            options: ["Event time is when the system processed the event; processing time is when the event occurred.", "Event time is when the event actually occurred; processing time is when the system processed it.", "There is no difference; they are the same.", "Event time is a timestamp added by the processor; processing time is added by the source."],
+            answer: 1,
+            explanation: "Event time is embedded in the event itself (e.g., a sensor reading stamped at 10:00 AM). Processing time is when the stream processor receives and processes it (e.g., 10:02 AM due to network delay). The 2-minute gap is what makes correct windowing challenging."
+        },
+        {
+            q: "Why is using \"event time\" essential for accurate analytics?",
+            options: ["It is simpler to implement.", "It ensures accuracy when messages can arrive late or out-of-order.", "It is required by all stream processors.", "It makes the system run faster."],
+            answer: 1,
+            explanation: "If you use processing time for a window, a late-arriving event gets assigned to the wrong window (the one it arrived in, not the one it belongs to). Event time ensures every event is placed in the correct logical window, regardless of delivery delays."
+        },
+        {
+            q: "In which use case would you most likely use a tumbling window of 1 minute?",
+            options: ["Calculating a rolling average of stock prices.", "Grouping user activity by a session of inactivity.", "Computing total sales for each discrete minute of the day.", "Detecting trends in social media posts."],
+            answer: 2,
+            explanation: "Tumbling windows produce discrete, non-overlapping summaries. 'Total sales per minute' is a natural fit — you want one clean number per minute, with no overlap. Rolling averages suit sliding windows, and session grouping suits session windows."
+        },
+        {
+            q: "What is a \"count window\" or \"element window\"?",
+            options: ["A window that groups a fixed number of events, regardless of time.", "A window that counts the number of windows.", "A window that processes data based on CPU count.", "A window that is only used for IoT devices."],
+            answer: 0,
+            explanation: "A count-based window groups a predetermined number of events regardless of how much time passes. For example, a count window of 100 waits until 100 events have arrived, processes them, then opens a new window for the next 100 events."
+        },
+        {
+            q: "In the context of windowing, what does \"slide interval\" refer to?",
+            options: ["How long the window lasts.", "How often a new window is created or how often the window moves.", "The speed of the data stream.", "The time it takes to process a window."],
+            answer: 1,
+            explanation: "The slide interval controls how frequently results are updated. In a window of length=10min, slide=1min, a new result is emitted every minute. A smaller slide gives more frequent updates; when slide equals length, you get a tumbling window."
+        },
+        {
+            q: "What is the main challenge when processing out-of-order messages in a stream?",
+            options: ["They take up too much memory.", "They can lead to inaccurate aggregations if the system does not wait for or account for late-arriving data.", "They are always dropped by the system.", "They are a sign of a security breach."],
+            answer: 1,
+            explanation: "If an event from 10:00 AM arrives at 10:05 AM, and the 10:00-10:05 window has already been computed and closed, the event either gets dropped or triggers a correction. Without handling this, aggregations (counts, sums) for past windows will be wrong."
+        },
+        {
+            q: "What is one way to handle out-of-order messages?",
+            options: ["Ignore all messages.", "Shut down the system when a late message arrives.", "Use a watermark to specify how long to wait for delayed events.", "Send all messages to a batch system."],
+            answer: 2,
+            explanation: "A watermark defines the maximum expected delay. If the watermark is 2 minutes, the system holds each window open for 2 extra minutes after the window's end time to accommodate late arrivals before computing and emitting the result."
+        },
+        {
+            q: "What is a \"stateful\" stream processing operation?",
+            options: ["An operation that processes each event independently.", "An operation that keeps track of previous events or aggregates to compute results.", "An operation that runs on a single machine.", "An operation that does not require memory."],
+            answer: 1,
+            explanation: "A stateful operation's output depends on both the current event AND previously stored state. Computing a running count of page views requires remembering the previous count. Stateless operations (like map/filter) produce output based only on the current event."
+        },
+        {
+            q: "What is a challenge of stateful stream processing?",
+            options: ["It is too simple.", "Maintaining state can increase memory usage and complexity, and large state can slow down processing.", "It cannot be used for aggregations.", "It is only supported by Kafka."],
+            answer: 1,
+            explanation: "State must be stored somewhere (in-memory or external DB), checkpointed for fault tolerance, and managed across distributed nodes. As the number of unique keys (e.g., unique users) grows, state size can become very large and costly to manage."
+        },
+        {
+            q: "Which of the following is an example of a stateless operation?",
+            options: ["Counting active users per hour.", "Tracking a user's account balance.", "Filtering out all transactions less than \$100.", "Calculating a running average of sensor readings."],
+            answer: 2,
+            explanation: "A filter checks each event independently ('is this transaction > \$100?') without needing to remember anything about previous events. Counting, balance tracking, and running averages all require memory of past data, making them stateful."
+        },
+        {
+            q: "What is a common tool used for Message Distribution?",
+            options: ["Apache Spark", "Apache Flink", "Apache Kafka", "Grafana"],
+            answer: 2,
+            explanation: "Apache Kafka is the industry-standard message distribution system (broker) for streaming. It is designed for high-throughput, fault-tolerant, ordered message delivery. Spark and Flink are stream processors; Grafana is for visualization."
+        },
+        {
+            q: "In the context of windowing, what is the \"window length\"?",
+            options: ["The time it takes to compute the result.", "The duration over which events are grouped.", "The total time the stream processor runs.", "The size of the data payload."],
+            answer: 1,
+            explanation: "Window length (or window size) defines how wide the grouping bucket is. A 10-minute window length means each window spans 10 minutes worth of events. It is a core parameter for both tumbling and sliding windows."
+        },
+        {
+            q: "What is a key characteristic of a micro-batch processing system like Spark Streaming?",
+            options: ["It processes each event individually with sub-millisecond latency.", "It collects events into small batches and processes them at set intervals, resulting in latencies of seconds.", "It is primarily used for ETL.", "It does not support windowing."],
+            answer: 1,
+            explanation: "Micro-batch systems like Spark Streaming treat the stream as a series of small RDD batches (e.g., every 1-2 seconds). While simpler to implement and fault-tolerant, this batch interval creates an inherent minimum latency in the seconds range."
+        },
+        {
+            q: "What is the main advantage of a real-time (continuous) processing system over a micro-batch system?",
+            options: ["Higher throughput.", "Lower latency (tens to hundreds of milliseconds).", "Simpler to implement.", "Better integration with batch systems."],
+            answer: 1,
+            explanation: "True streaming engines like Apache Flink process events one at a time (or very small groups) as they arrive, achieving latencies in the milliseconds range. Micro-batch systems are bounded by their batch interval (typically seconds), making them unsuitable for ultra-low-latency requirements."
+        },
+        {
+            q: "How can state be managed in a stateful stream processing application?",
+            options: ["State can only be stored in the stream processor's local memory.", "State cannot be stored; it must be recomputed each time.", "State can be stored internally in the stream processor or externally in databases like Redis or Cassandra.", "State is stored in a message queue."],
+            answer: 2,
+            explanation: "State management is flexible: internal state (e.g., Flink's managed state) is fast but tied to the processor's memory/checkpoints. External state stores like Redis or Cassandra allow state to be shared across multiple processors or accessed by other services."
+        },
+        {
+            q: "For a session window on a website, what event would typically cause a session to end?",
+            options: ["The user clicking a \"logout\" button.", "A period of inactivity exceeding a set threshold, like 30 minutes.", "The user closing their browser.", "The system restarting."],
+            answer: 1,
+            explanation: "Session windows in stream processing are defined by inactivity gaps, not explicit end signals. The system can't reliably detect 'browser closed', but it can detect that no new events have arrived for 30 minutes and conclude the session has ended."
+        },
+        {
+            q: "In a streaming system for an e-commerce site, which component is responsible for updating the \"inventory stock per product\" in real-time?",
+            options: ["Data Generation", "Message Distribution", "Stream Processor (stateful)", "Output Storage"],
+            answer: 2,
+            explanation: "Updating inventory requires keeping track of the current stock count and adjusting it with each purchase or restock event. This is a stateful aggregation — the stream processor maintains the running count per product_id in its state store."
+        },
+        {
+            q: "What is a \"watermark\" in the context of event time processing?",
+            options: ["A timestamp added by the processor.", "A global progress metric that asserts that events with a timestamp less than the watermark are no longer expected.", "A security token.", "A type of window."],
+            answer: 1,
+            explanation: "A watermark is essentially a statement: 'I am confident that all events with event_time < X have arrived.' It allows the system to safely close and emit results for windows that end before time X, while accepting that truly late events (beyond the watermark) may be dropped or handled specially."
+        },
+        {
+            q: "If a sensor reading with an event time of 10:30 arrives at the processor at 10:32, and the system's watermark is set to 1 minute, what will happen?",
+            options: ["The event will be dropped because it is considered too late.", "The event will be processed without any issue.", "The system will crash.", "The watermark will be automatically adjusted."],
+            answer: 0,
+            explanation: "With a 1-minute watermark, the system only accepts events that are at most 1 minute late. The event arrived 2 minutes late (10:30 event time, 10:32 processing time). Since 2 > 1, this exceeds the watermark tolerance, so the event is considered too late and is typically dropped."
+        },
+        {
+            q: "Which of the following best describes the role of Apache NiFi?",
+            options: ["A low-latency stream processor like Flink.", "A message distribution system like Kafka.", "A data flow management and ETL tool, often used to route and transform data before it enters a true streaming processor.", "A database for storing streaming results."],
+            answer: 2,
+            explanation: "Apache NiFi is a data flow management tool designed for routing, transforming, and mediating data between systems. It provides a visual interface for building data pipelines and is often used for data ingestion, routing, and light transformations before data enters a stream processor."
+        },
+        {
+            q: "What is the typical latency of a micro-batch processing system?",
+            options: ["Milliseconds", "Microseconds", "Seconds to tens of seconds", "Hours"],
+            answer: 2,
+            explanation: "Micro-batch systems process data in small batches at regular intervals (e.g., every 1-2 seconds). The minimum latency is bounded by the batch interval, so even in the best case, results take seconds to appear — suitable for near-real-time but not ultra-low-latency use cases."
+        },
+        {
+            q: "In the online banking transaction monitoring example, what is the role of the \"Message Distribution\" stage?",
+            options: ["To create the user's payment event.", "To analyze the transaction for fraud.", "To reliably receive the payment event from the banking app and distribute it to the stream processor.", "To store the final alert in a dashboard."],
+            answer: 2,
+            explanation: "The message broker (e.g., Kafka) sits between the banking app (producer) and the fraud detection engine (consumer). It ensures events are reliably buffered, ordered, and delivered even if the processor is momentarily unavailable."
+        },
+        {
+            q: "For computing the \"average temperature of a sensor over the last 10 minutes, updated every 1 minute,\" which type of window is most appropriate?",
+            options: ["Tumbling window (10 minutes)", "Session window (1 minute gap)", "Sliding window (length = 10 minutes, slide = 1 minute)", "Count window (10 events)"],
+            answer: 2,
+            explanation: "This is a classic sliding window scenario: window length = 10 minutes (the range of data you're averaging over), slide interval = 1 minute (how often you want a new result). Each minute, you get a fresh 10-minute average that overlaps with the previous window."
+        },
+        {
+            q: "What is a significant challenge when storing state externally (e.g., in Redis) for a stream processing application?",
+            options: ["It simplifies the application but introduces network latency for each state access.", "It makes the application stateless.", "It is impossible to do.", "It reduces the need for fault tolerance."],
+            answer: 0,
+            explanation: "Every state read/write requires a network round-trip to the external store (e.g., Redis). For high-throughput streams where state is accessed for every event, this network latency can become a significant bottleneck, potentially reducing throughput and increasing per-event processing time."
+        }
+    ],
+
+    lecture3: [
+        {
+            q: "What was Apache Hadoop's original processing framework designed for?",
+            options: ["Real-time stream processing.", "Processing very large datasets in batch using a distributed, disk-based model.", "In-memory database caching.", "Machine learning model deployment."],
+            answer: 1,
+            explanation: "Hadoop MapReduce was designed to process massive datasets that didn't fit on a single machine, using a distributed cluster. Its design was optimized for batch workloads where data is read from HDFS, processed, and written back to HDFS."
+        },
+        {
+            q: "What does \"acyclic data flow\" mean in the context of Hadoop MapReduce?",
+            options: ["Data can flow in cycles and loops for iterative processing.", "Data moves in a single direction from input to output without loops, with intermediate results written to disk.", "Data flows from the reducer back to the mapper.", "Data is processed in a circular buffer."],
+            answer: 1,
+            explanation: "MapReduce uses a Directed Acyclic Graph (DAG) of map and reduce stages. Data flows strictly forward — Map → Shuffle → Reduce — with no cycles. Each stage writes to disk before the next stage reads, which is inefficient for iterative algorithms."
+        },
+        {
+            q: "What is a major limitation of Hadoop for iterative algorithms like machine learning?",
+            options: ["It is too fast.", "It relies heavily on disk-based processing, requiring each iteration to reload data from disk and write results back, leading to high latency.", "It cannot run on a cluster.", "It doesn't support Java."],
+            answer: 1,
+            explanation: "Machine learning algorithms (e.g., gradient descent, k-means) iterate over data dozens or hundreds of times. With Hadoop, each iteration reads from HDFS and writes intermediate results back to disk — an extremely slow and I/O-intensive operation at scale."
+        },
+        {
+            q: "In the MapReduce model, what happens to intermediate results after a stage?",
+            options: ["They are kept in memory for the next stage.", "They are written to disk and then read again for the next stage.", "They are discarded.", "They are sent directly to the user."],
+            answer: 1,
+            explanation: "Between Map and Reduce stages, all intermediate key-value pairs are written to local disk (as part of the shuffle phase). The Reduce tasks then read from disk. This disk I/O is the primary performance bottleneck in Hadoop."
+        },
+        {
+            q: "For a machine learning algorithm that requires 10 iterations over a dataset, how many times would Hadoop ideally need to read the dataset from disk?",
+            options: ["Once", "5 times", "10 times (or more, depending on the number of stages per iteration)", "It depends on the model."],
+            answer: 2,
+            explanation: "Since Hadoop writes results to disk between iterations and reads them again for the next iteration, each of the 10 iterations requires at least one full read of the dataset from disk (plus intermediate write-read cycles). This is extremely slow compared to in-memory computation."
+        },
+        {
+            q: "What central idea did Apache Spark introduce to overcome Hadoop's limitations?",
+            options: ["A new disk-based storage format.", "In-memory distributed computing, keeping the working set of data in RAM across iterations.", "Removing fault tolerance.", "Single-node processing."],
+            answer: 1,
+            explanation: "Spark's key innovation was keeping frequently accessed data (the 'working set') in distributed memory (RAM) across the cluster. This eliminates the costly disk I/O between iterations, making iterative algorithms 10-100x faster than Hadoop MapReduce."
+        },
+        {
+            q: "What is a \"working set\" in the context of iterative algorithms?",
+            options: ["The final model output.", "The data that is currently being processed and reused across multiple iterations.", "A set of machines in the cluster.", "The code written by the developer."],
+            answer: 1,
+            explanation: "In an iterative algorithm, the working set is the dataset that the algorithm repeatedly accesses in each iteration. In k-means clustering, for example, the entire training dataset is the working set — read once per iteration. Keeping it in memory avoids repeated disk reads."
+        },
+        {
+            q: "What is the main benefit of in-memory processing for iterative algorithms?",
+            options: ["It requires more disk space.", "It is slower than disk-based processing.", "It avoids repeatedly loading data from disk, resulting in much faster computation (10-100x for some workloads).", "It makes the system less fault-tolerant."],
+            answer: 2,
+            explanation: "RAM access is orders of magnitude faster than disk I/O (nanoseconds vs. milliseconds). By caching the working dataset in memory, Spark eliminates the dominant bottleneck in iterative Hadoop workloads, delivering 10-100x speedups in benchmarks like logistic regression."
+        },
+        {
+            q: "What is a key design challenge introduced by Spark's in-memory processing?",
+            options: ["It is easier to manage.", "It requires no fault tolerance.", "Distributed memory management and fault tolerance must be handled efficiently.", "It can only run on a single machine."],
+            answer: 2,
+            explanation: "Disk is inherently durable; RAM is not. If a node fails, its in-memory data is lost. Spark must handle distributed memory management (what to keep in RAM vs. spill to disk) and fault tolerance (how to recover lost data without checkpointing everything to disk)."
+        },
+        {
+            q: "What is the name of Spark's core data abstraction that provides fault tolerance and distributed in-memory processing?",
+            options: ["Hadoop Distributed File System (HDFS)", "MapReduce", "Resilient Distributed Dataset (RDD)", "Data Lake"],
+            answer: 2,
+            explanation: "The Resilient Distributed Dataset (RDD) is Spark's fundamental data structure. It represents a distributed, fault-tolerant collection of elements partitioned across cluster nodes that can be processed in parallel in memory."
+        },
+        {
+            q: "What does \"Resilient\" refer to in the term Resilient Distributed Dataset (RDD)?",
+            options: ["The dataset is stored on a single resilient machine.", "The dataset can automatically recover lost data after a failure.", "The dataset is encrypted.", "The dataset is backed up to tape."],
+            answer: 1,
+            explanation: "'Resilient' means fault-tolerant — the RDD can recover from node failures. Unlike replication, Spark achieves resilience through lineage: it remembers how to recompute any lost partition from its parent data."
+        },
+        {
+            q: "How does Spark achieve fault tolerance for RDDs?",
+            options: ["By replicating all data three times across the cluster.", "By writing all intermediate results to a database.", "By using a concept called \"lineage,\" which records the sequence of transformations used to build the RDD, allowing lost partitions to be recomputed.", "By relying on the user to manually restart jobs."],
+            answer: 2,
+            explanation: "Spark records the lineage graph — the chain of transformations applied to create each RDD (e.g., 'read from HDFS → filter → map'). If a partition is lost due to node failure, Spark re-executes only the relevant lineage chain to recompute that specific partition."
+        },
+        {
+            q: "What is a \"lineage graph\" in Spark?",
+            options: ["A graph of the cluster's network topology.", "A record of the parent RDDs and transformations used to create a given RDD.", "A type of chart used for performance monitoring.", "A family tree of the developers."],
+            answer: 1,
+            explanation: "A lineage graph (also called a DAG in Spark's context) is the recipe for creating an RDD. It traces back through all parent RDDs and the transformations applied to create the current one. This is Spark's mechanism for fault tolerance without data replication."
+        },
+        {
+            q: "If a partition of an RDD is lost due to a node failure, how does Spark recover it?",
+            options: ["The entire job is restarted from the beginning.", "The lost partition is recomputed by applying the recorded lineage transformations to the original input data.", "The data is restored from a backup in HDFS.", "The data is lost forever."],
+            answer: 1,
+            explanation: "Spark only recomputes the specific lost partition (fine-grained recovery). It looks up the lineage, traces back to the last available data (e.g., the original HDFS input), and re-executes only the necessary transformations on that partition in a different node."
+        },
+        {
+            q: "What is the main advantage of lineage-based fault recovery over replication?",
+            options: ["It is slower.", "It has no extra storage or processing overhead if failures do not occur.", "It uses more disk space.", "It is less reliable."],
+            answer: 1,
+            explanation: "Replication always uses 2x-3x storage overhead. Lineage has zero storage overhead — it only stores the transformation plan, not data copies. The cost of recovery is only paid when a failure actually occurs, making it very efficient for typical (failure-free) execution."
+        },
+        {
+            q: "Which of the following is a \"coarse-grained\" transformation supported by RDDs?",
+            options: ["Updating a single element in a dataset.", "Inserting a new record into a database.", "Applying a `map` or `filter` function to an entire dataset.", "Deleting a file."],
+            answer: 2,
+            explanation: "Coarse-grained transformations apply the same operation to all elements in a partition or dataset (e.g., 'double every number' via map). This is what enables efficient lineage recovery — you can describe the entire transformation in one line, not element by element."
+        },
+        {
+            q: "What is the role of a Cluster Manager in the Spark ecosystem?",
+            options: ["To write the Spark code.", "To allocate resources (CPU, memory) to Spark applications across the cluster.", "To store the data for processing.", "To visualize the results."],
+            answer: 1,
+            explanation: "The Cluster Manager (e.g., YARN, Mesos, or Spark Standalone) is responsible for resource allocation across the cluster. It decides how much CPU and memory each Spark application gets and schedules tasks across available worker nodes."
+        },
+        {
+            q: "Which of the following is a Cluster Manager that Spark can run on?",
+            options: ["HDFS", "YARN", "RDD", "DataFrame"],
+            answer: 1,
+            explanation: "YARN (Yet Another Resource Negotiator) is Hadoop's resource manager and one of the cluster managers Spark supports. Others include Apache Mesos and Spark's own built-in Standalone cluster manager. HDFS is a filesystem, not a cluster manager."
+        },
+        {
+            q: "Which component of the Spark Stack is used for processing real-time data streams?",
+            options: ["Spark SQL", "MLlib", "GraphX", "Spark Streaming"],
+            answer: 3,
+            explanation: "Spark Streaming (and its modern successor, Structured Streaming) is the component of the Spark stack designed for processing live data streams. Spark SQL is for structured queries, MLlib for machine learning, and GraphX for graph computation."
+        },
+        {
+            q: "What major technological trend motivated the need for real-time stream processing?",
+            options: ["The decrease in the number of connected devices.", "The rapid growth of data from mobile devices, web platforms, and sensor networks.", "The decreasing speed of network traffic.", "The shift from digital to paper-based records."],
+            answer: 1,
+            explanation: "The explosion of smartphones, IoT sensors, social media platforms, and web services created massive, continuous flows of data that needed to be acted upon immediately — something batch processing could not support."
+        },
+        {
+            q: "According to the lecture, what is the projected number of connected devices by 2020?",
+            options: ["1 billion", "9 billion", "50 billion", "1 trillion"],
+            answer: 2,
+            explanation: "The lecture cites projections of 50 billion connected devices by 2020, reflecting the massive scale of IoT growth that drives the need for real-time stream processing infrastructure."
+        },
+        {
+            q: "Why does the value of data decrease rapidly in many modern applications?",
+            options: ["Because data always loses value over time.", "If it is not analyzed immediately, the opportunity to act (e.g., stop fraud, make a timely recommendation) is lost.", "Because it is encrypted.", "Because it is stored in the cloud."],
+            answer: 1,
+            explanation: "Data has a 'freshness' window. A fraud alert 10 seconds after a transaction can stop it; an alert 10 hours later cannot. A recommendation shown while a user is browsing is valuable; one sent a day later is irrelevant. The actionable value diminishes rapidly with time."
+        },
+        {
+            q: "What is a key requirement for a stream processing system?",
+            options: ["It must run on a single, powerful machine.", "It must produce results with low latency (milliseconds/seconds) for continuous data.", "It must store all data forever.", "It must only support SQL queries."],
+            answer: 1,
+            explanation: "The defining requirement of a stream processing system is low-latency, continuous processing. Results must be produced quickly enough to be actionable — whether that means milliseconds for fraud detection or seconds for real-time dashboards."
+        },
+        {
+            q: "How did the definition of \"Big Data\" evolve with the rise of streaming?",
+            options: ["From \"Volume and Variety\" to \"Volume, Variety, and Velocity\".", "From \"Velocity and Volume\" to \"Variety and Veracity\".", "From \"Volume and Value\" to \"Velocity and Variety\".", "It did not evolve."],
+            answer: 0,
+            explanation: "The original Big Data definition focused on Volume (large amounts of data) and Variety (different data types). The rise of streaming added Velocity — the speed at which data is generated and must be processed — as a third critical dimension."
+        },
+        {
+            q: "Which statement best reflects the importance of streaming analytics?",
+            options: ["Stream processing is only useful for a few niche applications.", "Without stream processing, there is no big data and no Internet of Things.", "Stream processing is a temporary trend that will be replaced by batch processing.", "Stream processing is too complex to be useful."],
+            answer: 1,
+            explanation: "The lecture emphasizes that streaming analytics is foundational to modern data infrastructure. IoT devices continuously emit data that must be processed in real-time, and big data's 'velocity' dimension cannot be addressed without stream processing."
+        },
+        {
+            q: "According to the lecture, what is a potential saving for a transportation company like Norfolk Southern from a 1 mph speed increase, enabled by streaming analytics?",
+            options: ["\$1 million", "\$50 million", "\$200 million", "\$1 billion"],
+            answer: 2,
+            explanation: "The lecture uses Norfolk Southern as a real-world example, citing that real-time analytics enabling just a 1 mph average speed increase across their fleet could translate to approximately \$200 million in annual savings."
+        },
+        {
+            q: "What is the difference between Spark Streaming (DStreams) and Structured Streaming?",
+            options: ["Spark Streaming is the modern, recommended approach, while Structured Streaming is older.", "Structured Streaming is based on DataFrames and Spark SQL, offering simpler APIs, while Spark Streaming is based on the older RDD-based DStream API.", "There is no difference; they are the same.", "Spark Streaming is for batch processing, Structured Streaming is for streaming."],
+            answer: 1,
+            explanation: "DStream-based Spark Streaming is the original API built on RDDs. Structured Streaming is the newer, recommended API built on the DataFrame/Dataset abstraction and Spark SQL engine, offering simpler code, better optimizations, and event-time support."
+        },
+        {
+            q: "What processing model does Spark Streaming (DStreams) primarily use?",
+            options: ["Continuous streaming", "Micro-batch processing", "Event-at-a-time processing", "Map-only processing"],
+            answer: 1,
+            explanation: "Spark Streaming's DStream API uses micro-batch processing: the incoming stream is divided into small RDD batches at a fixed interval (e.g., every 1 second), and each batch is processed as a regular Spark job."
+        },
+        {
+            q: "What is the data structure used in Spark Streaming's original API (DStreams)?",
+            options: ["DataFrames", "RDDs", "Datasets", "Tables"],
+            answer: 1,
+            explanation: "DStreams (Discretized Streams) are implemented as a sequence of RDDs. Each micro-batch interval produces one RDD containing the events received during that interval, allowing all standard RDD operations to be applied."
+        },
+        {
+            q: "Which Spark streaming technology is built on top of Spark SQL and is the recommended approach for new applications?",
+            options: ["DStreams", "RDDs", "Structured Streaming", "Spark Core"],
+            answer: 2,
+            explanation: "Structured Streaming is built on Spark SQL's DataFrame/Dataset engine, inheriting its optimizations (Catalyst optimizer, Tungsten execution engine). It is the recommended API for new Spark streaming applications due to its simpler programming model and richer features like event-time windowing."
+        }
+    ],
+
+    lecture4: [
+        {
+            q: "What is Spark Streaming's primary method for handling a live data stream?",
+            options: ["Processing each event individually as it arrives.", "Breaking the stream into small, deterministic micro-batches (RDDs) for processing.", "Storing the stream in a database for later analysis.", "Sending the stream to a different system."],
+            answer: 1,
+            explanation: "Spark Streaming uses micro-batch processing: the live stream is divided into small time-based batches (e.g., every 1 second), each represented as an RDD and processed by the Spark engine as a regular batch job."
+        },
+        {
+            q: "What is the core abstraction in Spark Streaming that represents a stream of data?",
+            options: ["RDD", "DataFrame", "Discretized Stream (DStream)", "Kafka Topic"],
+            answer: 2,
+            explanation: "A DStream (Discretized Stream) is the primary abstraction in Spark Streaming. It represents a continuous stream of data logically, but is implemented as a series of RDDs — one per micro-batch interval."
+        },
+        {
+            q: "How is a DStream (Discretized Stream) implemented in Spark Streaming?",
+            options: ["As a single, large, mutable dataset.", "As a sequence of RDDs, where each RDD contains the data for one micro-batch.", "As a continuous stream of individual events.", "As a list of Kafka topics."],
+            answer: 1,
+            explanation: "Under the hood, a DStream is a sequence of RDDs generated at each batch interval. For example, with a 1-second interval, a new RDD is created every second containing all events received in that second."
+        },
+        {
+            q: "What is a key advantage of using the DStream API?",
+            options: ["It is completely different from the RDD API.", "It is very similar to the RDD API, allowing easy integration with batch and interactive processing.", "It is only available in Python.", "It does not support functional operations."],
+            answer: 1,
+            explanation: "Since DStreams are built on RDDs, developers familiar with Spark's batch API can reuse their knowledge. Operations like map, filter, and reduceByKey work the same way on DStreams as on RDDs, enabling unified batch and streaming code."
+        },
+        {
+            q: "Which of the following is a benefit of integrating streaming with batch processing in the same framework?",
+            options: ["It requires maintaining two different stacks with different programming models.", "It doubles the implementation effort.", "It allows you to use the same code for real-time and batch jobs, simplifying development.", "It increases the number of bugs."],
+            answer: 2,
+            explanation: "Spark's unified stack means you write once and run in batch or streaming mode. This eliminates the need to maintain separate codebases for batch ETL and real-time processing, reducing complexity and development time."
+        },
+        {
+            q: "How does Spark Streaming achieve fault tolerance for input data?",
+            options: ["It relies on the user to manually back up data.", "Batches of input data are replicated in memory across the cluster.", "It writes all input data to a single log file.", "It does not provide fault tolerance."],
+            answer: 1,
+            explanation: "When data is received by Spark Streaming's receivers, it is replicated to multiple worker nodes in memory. This replication ensures that if one worker fails, the data can still be processed from the replica on another node."
+        },
+        {
+            q: "If a worker node fails, how does Spark Streaming recover the lost data?",
+            options: ["The job is restarted from the beginning.", "The data is recomputed from the replicated input data batches using the lineage of the RDDs.", "The data is lost.", "The user must re-upload the data."],
+            answer: 1,
+            explanation: "Spark Streaming combines two fault-tolerance mechanisms: replicated input data (so raw data is not lost) and RDD lineage (so any derived RDD can be recomputed). A failed worker's tasks are re-executed on another node using the replica data."
+        },
+        {
+            q: "How does Spark Streaming provide fault tolerance for the Master node?",
+            options: ["The master node is not fault-tolerant.", "The master node saves the state of the DStreams to a checkpoint file (e.g., on HDFS) periodically.", "A second master node runs in constant standby.", "It uses a replicated database."],
+            answer: 1,
+            explanation: "The driver (master) periodically writes its state — including the DStream graph, configuration, and accumulated state — to a checkpoint file on a fault-tolerant file system like HDFS. If the driver crashes, it can be restarted and resume from the last checkpoint."
+        },
+        {
+            q: "What is the purpose of a \"checkpoint file\" in Spark Streaming?",
+            options: ["To store the application's source code.", "To save the state of the DStreams and the streaming application so that the master can be restarted after a failure.", "To log all events for debugging.", "To store the final output."],
+            answer: 1,
+            explanation: "Checkpointing saves both the metadata (DStream graph, batch intervals) and the stateful data (e.g., accumulated state in updateStateByKey) to reliable storage. This allows full recovery of the streaming application after a driver failure."
+        },
+        {
+            q: "What is the \"exactly-once\" processing guarantee in Spark Streaming related to?",
+            options: ["Every event is processed at least once.", "Every event is processed at most once.", "Every event is processed exactly once, and all transformed data is fault-tolerant.", "It guarantees the final output is stored exactly once."],
+            answer: 2,
+            explanation: "Spark Streaming's deterministic micro-batch model ensures exactly-once semantics for transformations: each event in an RDD is processed exactly once. Combined with idempotent output sinks, this provides end-to-end exactly-once guarantees."
+        },
+        {
+            q: "What is the main advantage of using a DStream's `updateStateByKey` transformation?",
+            options: ["It performs stateless aggregations.", "It allows for arbitrary stateful computations by generating a new state based on the previous state and new data.", "It is used for filtering data.", "It is used for joining two streams."],
+            answer: 1,
+            explanation: "updateStateByKey maintains a persistent state per key across micro-batches. For each new batch, it calls a user-defined function that receives the new data for a key AND its previous state, allowing stateful aggregations like running counts or mood tracking."
+        },
+        {
+            q: "What does the `transform` operation on a DStream allow you to do?",
+            options: ["Only apply simple map functions.", "Apply arbitrary RDD-to-RDD functions, enabling powerful operations like joining the streaming data with a static RDD (e.g., from a file).", "It's the same as `map`.", "It's used to output the stream."],
+            answer: 1,
+            explanation: "The transform operation provides access to the underlying RDD of each micro-batch, allowing you to apply any arbitrary RDD operation — including joining with static datasets, applying ML models, or any custom logic not available in the standard DStream API."
+        },
+        {
+            q: "In the example `tweets.transform(tweetsRDD => { tweetsRDD.join(spamHDFSFile).filter(...) })`, what is the purpose?",
+            options: ["To count the number of tweets.", "To join the incoming tweet stream with a static list of spam users from HDFS to filter out bad tweets.", "To save the tweets to an HDFS file.", "To convert the DStream to an RDD."],
+            answer: 1,
+            explanation: "This is a classic stream-static join pattern. The live tweet stream (DStream) is joined with a static RDD loaded from HDFS containing known spam users. Matching tweets are filtered out, demonstrating how streaming and batch data can be combined."
+        },
+        {
+            q: "Which of the following is an \"out of the box\" input source for a DStream?",
+            options: ["Oracle Database", "Apache Kafka", "MongoDB", "Redis"],
+            answer: 1,
+            explanation: "Spark Streaming provides native (built-in) connectors for Kafka, Flume, Kinesis, and socket streams. For other sources like databases, custom receivers must be written. Kafka is the most commonly used native input source."
+        },
+        {
+            q: "Which of the following is a valid output sink for a Spark Streaming application?",
+            options: ["A printer", "A Hadoop-compatible filesystem like HDFS or S3", "A simple text file on the local driver's disk", "A console application only"],
+            answer: 1,
+            explanation: "Spark Streaming can write results to HDFS, S3, databases (via foreachRDD), Kafka topics, dashboards, and more. Writing to a local disk is unreliable in a distributed cluster context since different tasks run on different machines."
+        },
+        {
+            q: "What does Spark Streaming's integration with YARN provide?",
+            options: ["A new programming language.", "Scheduling and resource management, including integration with security like Kerberos.", "A way to write queries in SQL.", "A graphical user interface."],
+            answer: 1,
+            explanation: "Running Spark Streaming on YARN provides enterprise-grade resource management, multi-tenancy (sharing the cluster with other applications), and security features like Kerberos authentication, which is critical for production deployments in large organizations."
+        },
+        {
+            q: "What is the main benefit of combining DStreams with RDDs?",
+            options: ["It makes the system slower.", "It allows you to combine live data streams with historical data (e.g., joining a stream with a model stored in an RDD).", "It makes the code more complex.", "It is not possible to combine them."],
+            answer: 1,
+            explanation: "Since DStreams expose their underlying RDDs, you can join live streaming data with static reference datasets stored as RDDs (e.g., a trained ML model, a lookup table, a blacklist). This is a powerful pattern for enriching or filtering streaming data."
+        },
+        {
+            q: "How can Spark Streaming be used with Machine Learning libraries (MLlib)?",
+            options: ["It cannot; they are separate systems.", "For offline learning and online prediction, combining streaming data with models trained in MLlib.", "Only for batch processing.", "Only for streaming, not for learning."],
+            answer: 1,
+            explanation: "A common pattern is: train a model offline using MLlib on historical batch data, then load the model into a Spark Streaming job to make real-time predictions on incoming events. Some algorithms also support online learning where the model updates with each micro-batch."
+        },
+        {
+            q: "What is one way to interactively query streaming data?",
+            options: ["By printing it to the console.", "By using Spark SQL to run queries on the streaming data as if it were a table.", "By writing it to a NoSQL database.", "It is impossible to query streaming data."],
+            answer: 1,
+            explanation: "Within a foreachRDD call, you can register each micro-batch RDD as a temporary SQL table and run Spark SQL queries against it. This allows analysts to use familiar SQL syntax on live streaming data for ad-hoc analysis."
+        },
+        {
+            q: "According to the lecture, what kind of latency can Spark Streaming achieve?",
+            options: ["Minute-scale latencies", "Second-scale latencies", "Hour-scale latencies", "Day-scale latencies"],
+            answer: 1,
+            explanation: "Spark Streaming achieves second-scale latencies (typically 1-2 seconds minimum due to the micro-batch model). This makes it suitable for near-real-time applications but not for sub-second latency requirements."
+        },
+        {
+            q: "What level of throughput can Spark Streaming achieve on a 100-node cluster, according to the lecture?",
+            options: ["1 GB/sec", "6 GB/sec (60M records/sec)", "100 MB/sec", "1 TB/sec"],
+            answer: 1,
+            explanation: "The lecture cites benchmark results showing Spark Streaming achieving approximately 6 GB/sec (60 million records per second) on a 100-node cluster, demonstrating its ability to handle very high-throughput production workloads."
+        },
+        {
+            q: "What is the role of a \"Receiver\" in Spark Streaming?",
+            options: ["It's the main driver program.", "It's a component that reads data from input sources (like Kafka or sockets) and creates the DStream.", "It's a type of output sink.", "It's a data transformation."],
+            answer: 1,
+            explanation: "A Receiver runs as a long-running task on a worker node. It continuously listens to an input source (e.g., a Kafka topic or TCP socket), buffers the incoming data, and feeds it into Spark Streaming as micro-batches to form the DStream."
+        },
+        {
+            q: "What is the key idea behind \"Discretized Stream Processing\"?",
+            options: ["To run a streaming computation as a series of very small, deterministic batch jobs.", "To process the entire stream as one giant batch.", "To discard data after processing.", "To run the computation on a single machine."],
+            answer: 0,
+            explanation: "Discretized Stream (D-Stream) processing treats a stream as a series of tiny, deterministic RDD batches. By reducing a streaming problem to a series of batch problems, Spark reuses all of its batch processing optimizations and fault-tolerance mechanisms."
+        },
+        {
+            q: "If you wanted to maintain a per-user mood state based on their tweets, which DStream operation would be most suitable?",
+            options: ["map", "filter", "updateStateByKey", "window"],
+            answer: 2,
+            explanation: "updateStateByKey is designed for exactly this: maintaining arbitrary state per key (here, the user ID) across micro-batches. Each new batch of tweets updates the mood state for each user based on their latest tweets and previous accumulated state."
+        },
+        {
+            q: "What is the primary advantage of Spark Streaming's \"one stack to rule them all\" vision?",
+            options: ["It forces developers to use a single programming language.", "It allows the same code and concepts (RDDs, DStreams) to be used for batch, interactive, and streaming workloads.", "It makes the system more expensive.", "It limits the use cases."],
+            answer: 1,
+            explanation: "The unified stack vision means developers learn one API (Spark's RDD/DataFrame model) and one system, then apply it to batch ETL, interactive SQL queries, machine learning, and real-time streaming — eliminating the operational complexity of maintaining separate systems."
+        },
+        {
+            q: "The Mobile Millennium Project uses Spark Streaming for what purpose?",
+            options: ["To display traffic maps.", "To perform online machine learning on GPS observations for traffic transit time estimation.", "To store historical traffic data.", "To design roads."],
+            answer: 1,
+            explanation: "The Mobile Millennium project at UC Berkeley used Spark Streaming to process real-time GPS data from mobile phones and perform online machine learning (Markov Chain Monte Carlo simulations) to estimate traffic transit times across road networks."
+        },
+        {
+            q: "What kind of computations does the Mobile Millennium Project perform that are CPU-intensive and require scaling?",
+            options: ["Simple counting of cars.", "Markov Chain Monte Carlo simulations on GPS observations.", "Data compression.", "Image processing."],
+            answer: 1,
+            explanation: "The Mobile Millennium project applies computationally expensive Markov Chain Monte Carlo (MCMC) statistical simulations to GPS probe vehicle data. The complexity of these simulations requires distributed scaling, which Spark Streaming provides."
+        },
+        {
+            q: "In Spark Streaming's fault-tolerance model, how are batches of input data treated?",
+            options: ["They are written to a single disk on the master node.", "They are replicated in memory across the cluster to allow for recomputation if a worker fails.", "They are not stored and must be re-read from the source if a failure occurs.", "They are written to a local file on each worker."],
+            answer: 1,
+            explanation: "Input data received by Spark Streaming is automatically replicated to two worker nodes in memory. This in-memory replication means that if one worker fails, the data is still available on the replica worker and the micro-batch can be reprocessed."
+        },
+        {
+            q: "What is a potential downside of using \"at-least-once\" processing semantics (like Storm) for stateful applications?",
+            options: ["It is too slow.", "It can update mutable state twice, leading to incorrect results.", "It is not fault-tolerant.", "It cannot process records."],
+            answer: 1,
+            explanation: "With at-least-once semantics, a message may be replayed after a failure. If that message updates mutable state (e.g., increments a counter), the counter gets incremented twice — corrupting the result. Exactly-once semantics prevent this double-counting."
+        },
+        {
+            q: "How does Spark Streaming's integration with messaging systems like Flume and Kafka benefit developers?",
+            options: ["It makes it harder to write custom receivers.", "It provides native integration, simplifying the ingestion of data from these popular systems.", "It forces the use of a specific messaging system.", "It does not integrate with them."],
+            answer: 1,
+            explanation: "Native connectors for Kafka and Flume mean developers don't need to write custom receiver code. The connectors handle connection management, offset tracking, fault tolerance, and backpressure automatically, significantly reducing development effort."
+        }
+    ],
+
+    lecture5: [
+        {
+            q: "What is Apache Storm primarily designed for?",
+            options: ["Batch processing of large datasets.", "Real-time distributed stream processing.", "SQL-based analytics on static data.", "Storing large amounts of data."],
+            answer: 1,
+            explanation: "Apache Storm is a distributed, fault-tolerant, real-time computation system designed specifically for processing unbounded streams of data with very low latency (sub-second). It was one of the first widely-adopted open-source stream processing systems."
+        },
+        {
+            q: "Where was Apache Storm originally created and later open-sourced?",
+            options: ["Google and Yahoo", "BackType and Twitter", "Facebook and Amazon", "Netflix and LinkedIn"],
+            answer: 1,
+            explanation: "Storm was originally created by Nathan Marz at BackType (a social media analytics company). When Twitter acquired BackType in 2011, Storm was open-sourced by Twitter and later donated to the Apache Software Foundation."
+        },
+        {
+            q: "What is the core abstraction in Storm that represents a network of spouts and bolts?",
+            options: ["A DStream", "An RDD", "A Topology", "A Node"],
+            answer: 2,
+            explanation: "A Topology is Storm's equivalent of a Spark job or a MapReduce program. It is a directed acyclic graph (DAG) of spouts (data sources) and bolts (processing units) connected by streams, defining the entire computation."
+        },
+        {
+            q: "In Storm, what is a \"Spout\"?",
+            options: ["A processing unit that performs transformations on data.", "A source of streams that reads input data from an external source and emits it as tuples.", "A way to group streams.", "The master node in the cluster."],
+            answer: 1,
+            explanation: "A Spout is the entry point of data into a Storm topology. It reads from external sources (Kafka, Twitter API, database, etc.) and emits tuples into the topology for processing by downstream bolts."
+        },
+        {
+            q: "In Storm, what is a \"Bolt\"?",
+            options: ["A source of data.", "A processing unit that processes input streams and can produce new streams (e.g., for filtering, functions, aggregations).", "The physical machine in the cluster.", "The configuration file."],
+            answer: 1,
+            explanation: "A Bolt is a processing node in a Storm topology. It receives tuples from spouts or other bolts, performs computations (filtering, joins, aggregations, ML inference, etc.), and can optionally emit new tuples to downstream bolts."
+        },
+        {
+            q: "What is a \"Tuple\" in Storm?",
+            options: ["A node in a topology.", "An ordered list of values, which is the basic unit of data in a stream.", "A type of spout.", "A configuration parameter."],
+            answer: 1,
+            explanation: "A Tuple is Storm's fundamental data unit — an ordered, named list of values (e.g., [user_id, tweet_text, timestamp]). All data flowing through a Storm topology is represented as tuples passed between spouts and bolts."
+        },
+        {
+            q: "What does a \"Stream\" in Storm represent?",
+            options: ["A single event.", "A finite dataset.", "An unbounded sequence of tuples.", "A network connection."],
+            answer: 2,
+            explanation: "In Storm, a Stream is an unbounded sequence of tuples flowing between components (spouts to bolts, or bolt to bolt). Each stream has a schema defining the names and types of fields in its tuples."
+        },
+        {
+            q: "What is the role of the \"Nimbus\" node in a Storm cluster?",
+            options: ["A worker node that executes tasks.", "The master node that manages topologies, distributes code, and assigns tasks.", "A database for storing results.", "A user interface for monitoring."],
+            answer: 1,
+            explanation: "Nimbus is Storm's master daemon. It is responsible for distributing code across the cluster, assigning tasks (spout/bolt instances) to Supervisor nodes, monitoring for failures, and reassigning tasks when workers fail."
+        },
+        {
+            q: "What is the role of the \"Supervisor\" node in a Storm cluster?",
+            options: ["The master node.", "A worker node that manages workers (threads) on its machine, listening for work assigned by Nimbus.", "A Zookeeper server.", "A client for submitting topologies."],
+            answer: 1,
+            explanation: "A Supervisor is a daemon that runs on each worker machine in the cluster. It listens for task assignments from Nimbus (communicated via Zookeeper) and starts/stops worker processes on its machine accordingly."
+        },
+        {
+            q: "What is the purpose of Zookeeper in a Storm cluster?",
+            options: ["To run the user's code.", "To store the data streams.", "To maintain the cluster state for Nimbus and Supervisor nodes.", "To provide a SQL interface."],
+            answer: 2,
+            explanation: "Zookeeper serves as the coordination service between Nimbus and Supervisors. It stores the cluster state, task assignments, and heartbeat information. This design makes Nimbus stateless — it reads/writes all state to Zookeeper, allowing it to be restarted without losing cluster state."
+        },
+        {
+            q: "What is a \"Worker\" in Storm?",
+            options: ["The master node.", "A thread spawned by a Supervisor to do the actual processing (run bolts and spouts).", "A type of tuple.", "The client application."],
+            answer: 1,
+            explanation: "A Worker is a JVM process (not just a thread) spawned by a Supervisor to run a subset of a topology's tasks. Each worker runs multiple executor threads, and each executor runs one or more bolt/spout instances (tasks)."
+        },
+        {
+            q: "What is the \"Shuffle Grouping\" in Storm?",
+            options: ["Sending all tuples to the same task.", "Picking a random task to send each tuple to, which evenly distributes the work.", "Hashing on a subset of tuple fields to guarantee a specific task receives all tuples for a given key.", "Sending the tuple to every task."],
+            answer: 1,
+            explanation: "Shuffle Grouping randomly distributes tuples across all bolt instances using a round-robin or random assignment. This achieves even load distribution and is ideal for stateless operations where it doesn't matter which instance processes a tuple."
+        },
+        {
+            q: "What is the \"Fields Grouping\" in Storm used for?",
+            options: ["Random distribution of work.", "Sending a tuple to all bolts.", "Consistent hashing on a subset of tuple fields to ensure that tuples with the same field values always go to the same task (e.g., for counting per user).", "Sending the tuple to the task with the lowest ID."],
+            answer: 2,
+            explanation: "Fields Grouping uses consistent hashing on the specified fields to route tuples. All tuples with the same field value (e.g., same user_id) always go to the same bolt instance. This is essential for stateful operations like per-user counting, where all data for a key must be co-located."
+        },
+        {
+            q: "What processing semantics does Storm provide for messages?",
+            options: ["Exactly-once", "At-least-once", "At-most-once", "No guarantee"],
+            answer: 1,
+            explanation: "Storm's default reliability mechanism provides at-least-once processing semantics. It uses an acker mechanism where spouts track tuples until they are fully processed. If a tuple fails or times out, it is replayed from the spout, guaranteeing it will be processed at least once."
+        },
+        {
+            q: "What is the implication of \"at-least-once\" semantics for a stateful bolt?",
+            options: ["It guarantees perfect state.", "It can lead to duplicate processing and state updates if a failure occurs.", "It is the same as exactly-once.", "It is easier to implement."],
+            answer: 1,
+            explanation: "If a tuple is replayed (because an ack was lost), a stateful bolt may process it again and update its state twice (e.g., count the same event twice). Developers must use idempotent operations or deduplication logic to handle this correctly."
+        },
+        {
+            q: "How does Storm provide fault tolerance for workers?",
+            options: ["Workers are not fault-tolerant.", "The Nimbus node monitors heartbeats. If a worker fails, the Supervisor restarts it or the Nimbus reassigns its tasks.", "All data is written to disk before processing.", "The user must manually restart the job."],
+            answer: 1,
+            explanation: "Workers send heartbeats to Zookeeper. If a worker's heartbeat times out, the Supervisor detects the failure and restarts the worker process. If the entire machine fails, Nimbus detects the missing heartbeats and reassigns the topology tasks to other Supervisors."
+        },
+        {
+            q: "What is a key performance feature of Storm?",
+            options: ["It can process millions of tuples per second per node.", "It is very slow.", "It cannot scale horizontally.", "It has high latency."],
+            answer: 0,
+            explanation: "Storm is designed for extremely high throughput and low latency. It can process millions of tuples per second per node, with sub-second (often millisecond) latency. This performance is achieved through efficient message passing using ZeroMQ/Netty."
+        },
+        {
+            q: "Which messaging protocol does Storm use for fast performance?",
+            options: ["HTTP", "ZeroMQ / Netty", "JDBC", "FTP"],
+            answer: 1,
+            explanation: "Storm uses ZeroMQ (and later Netty) for inter-process communication between workers. These are low-level, high-performance messaging libraries designed for minimal overhead, which is critical for achieving Storm's sub-second latency guarantees."
+        },
+        {
+            q: "How does Storm allow for \"local mode\" development?",
+            options: ["It requires a cluster of 5 machines.", "The entire system can run in a single JVM for easy unit testing.", "It can only be run in the cloud.", "There is no local mode."],
+            answer: 1,
+            explanation: "Storm's local mode simulates the entire distributed cluster (Nimbus, Supervisors, Workers, Zookeeper) within a single JVM process on the developer's machine. This allows full topology testing and debugging without requiring an actual cluster."
+        },
+        {
+            q: "What is the \"Global Grouping\" in Storm?",
+            options: ["Sending the tuple to a random task.", "Sending the tuple to all tasks.", "Sending the tuple to the task with the lowest ID.", "Hashing on all fields."],
+            answer: 2,
+            explanation: "Global Grouping routes all tuples to the single task with the lowest ID. This is useful when you need all data to converge to one place (e.g., for a final global aggregation), but creates a bottleneck so should be used carefully."
+        },
+        {
+            q: "What is the \"All Grouping\" in Storm?",
+            options: ["Sending the tuple to a random task.", "Sending the tuple to all tasks (used for things like signals).", "Hashing on a subset of fields.", "Sending the tuple to a single, specific task."],
+            answer: 1,
+            explanation: "All Grouping sends every tuple to ALL instances of the downstream bolt. This is used for broadcasting — for example, sending a configuration update or a signal to all bolt instances simultaneously. It should be used carefully as it multiplies traffic."
+        },
+        {
+            q: "In Storm's architecture, how does Nimbus communicate with Supervisors?",
+            options: ["Direct TCP/IP connection.", "Through a shared database.", "Through Zookeeper.", "They do not communicate."],
+            answer: 2,
+            explanation: "Nimbus and Supervisors are loosely coupled and communicate indirectly through Zookeeper. Nimbus writes task assignments to Zookeeper; Supervisors read their assignments from Zookeeper. This design makes both daemons stateless and independently restartable."
+        },
+        {
+            q: "If Nimbus fails in a Storm cluster, what happens to the running topologies?",
+            options: ["They immediately fail.", "They continue to run. However, if a Supervisor or worker fails, new tasks cannot be assigned until Nimbus is restarted.", "The whole cluster shuts down.", "The user must restart all topologies."],
+            answer: 1,
+            explanation: "Since all cluster state is stored in Zookeeper (not in Nimbus), running topologies continue executing on Supervisors even if Nimbus goes down. Nimbus is only needed for submitting new topologies and reassigning tasks after failures, so it is described as 'fail-fast' but not a single point of failure for running jobs."
+        },
+        {
+            q: "What is the primary programming language of Apache Storm's core?",
+            options: ["Java", "Python", "Clojure", "Scala"],
+            answer: 2,
+            explanation: "Storm's core was written in Clojure (a functional Lisp dialect running on the JVM) by its creator Nathan Marz. However, the public API is primarily Java-based, and Storm supports multilingual topologies through its multilang protocol."
+        },
+        {
+            q: "Which of the following companies is mentioned as a user of Storm?",
+            options: ["Microsoft", "Apple", "Twitter", "Amazon"],
+            answer: 2,
+            explanation: "Twitter was both the creator and one of the primary users of Storm, using it for real-time analytics on the Twitter stream, including processing tweets, computing trending topics, and ad targeting. Storm was open-sourced by Twitter in 2011."
+        },
+        {
+            q: "What is the main difference between a Spout and a Bolt?",
+            options: ["Spouts process data, bolts generate data.", "Spouts are sources of streams (generate data), bolts are processors (transform data).", "There is no difference.", "Spouts run on the master node, bolts run on worker nodes."],
+            answer: 1,
+            explanation: "Spouts are the data ingestion layer — they read from external systems and inject tuples into the topology. Bolts are the computation layer — they receive tuples, process them (filter, aggregate, join, etc.), and optionally emit new tuples to downstream bolts."
+        },
+        {
+            q: "When a tuple is emitted from a bolt, how is it determined which task it goes to?",
+            options: ["Randomly.", "Based on a user-defined stream grouping.", "It always goes to all tasks.", "Based on the order in which the bolts were created."],
+            answer: 1,
+            explanation: "Storm uses Stream Groupings to define how tuples are routed between components. The developer specifies the grouping type (shuffle, fields, all, global, etc.) when defining the topology, and Storm routes each tuple accordingly."
+        },
+        {
+            q: "What does the \"fault-tolerant\" feature of Storm refer to?",
+            options: ["It can automatically recover from failures of workers and management daemons.", "It never fails.", "It has a 100% uptime guarantee.", "It requires no maintenance."],
+            answer: 0,
+            explanation: "Storm's fault tolerance means it automatically detects and recovers from failures. Failed worker processes are restarted by Supervisors, failed machines cause Nimbus to reassign tasks, and unacknowledged tuples are replayed by spouts — all without manual intervention."
+        },
+        {
+            q: "If a worker process is \"timed out\" in Storm, what will the Supervisor do?",
+            options: ["It will ignore it.", "It will log the event and do nothing.", "It will restart or manage the worker process.", "It will shut down the entire cluster."],
+            answer: 2,
+            explanation: "The Supervisor monitors worker processes via heartbeats. If a worker stops sending heartbeats (times out), the Supervisor considers it dead and kills and restarts the worker process. Nimbus may also detect the failure and reassign the worker's tasks."
+        },
+        {
+            q: "What is a key feature of Storm that makes it \"programming language agnostic\"?",
+            options: ["It only supports Java.", "It uses a binary protocol that allows bolts and spouts to be written in any language that can read/write from stdin/stdout.", "It supports all languages natively.", "It requires all code to be written in Clojure."],
+            answer: 1,
+            explanation: "Storm's multilang protocol uses JSON messages over stdin/stdout, allowing bolts and spouts to be written in any language (Python, Ruby, JavaScript, etc.). The Storm worker manages the subprocess and communicates with it through this protocol, making the system truly language-agnostic."
+        }
+    ]
+};
+
+// Track scores per lecture
+const scores = {
+    lecture1: { correct: 0, wrong: 0, answered: 0 },
+    lecture2: { correct: 0, wrong: 0, answered: 0 },
+    lecture3: { correct: 0, wrong: 0, answered: 0 },
+    lecture4: { correct: 0, wrong: 0, answered: 0 },
+    lecture5: { correct: 0, wrong: 0, answered: 0 }
+};
+
+function updateGlobalStats() {
+    let totalAnswered = 0, totalCorrect = 0, totalWrong = 0;
+    for (const key in scores) {
+        totalAnswered += scores[key].answered;
+        totalCorrect += scores[key].correct;
+        totalWrong += scores[key].wrong;
+    }
+    document.getElementById('total-answered').textContent = totalAnswered;
+    document.getElementById('total-correct').textContent = totalCorrect;
+    document.getElementById('total-wrong').textContent = totalWrong;
+    const pct = totalAnswered > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
+    document.getElementById('total-percent').textContent = pct + '%';
+}
+
+function updateLectureStats(lectureId) {
+    const total = quizData[lectureId].length;
+    const s = scores[lectureId];
+    const remaining = total - s.answered;
+    document.getElementById(`correct-count-${lectureId}`).textContent = s.correct + ' Correct';
+    document.getElementById(`wrong-count-${lectureId}`).textContent = s.wrong + ' Wrong';
+    document.getElementById(`pending-count-${lectureId}`).textContent = remaining + ' Remaining';
+    document.getElementById(`progress-text-${lectureId}`).textContent = s.answered + ' / ' + total;
+    const pct = (s.answered / total) * 100;
+    document.getElementById(`progress-fill-${lectureId}`).style.width = pct + '%';
+}
+
+function handleAnswer(lectureId, qIndex, chosenIndex) {
+    const q = quizData[lectureId][qIndex];
+    const card = document.getElementById(`card-${lectureId}-${qIndex}`);
+    const buttons = card.querySelectorAll('.option-btn');
+    const feedback = document.getElementById(`feedback-${lectureId}-${qIndex}`);
+
+    buttons.forEach(btn => btn.disabled = true);
+
+    const isCorrect = chosenIndex === q.answer;
+
+    if (isCorrect) {
+        buttons[chosenIndex].classList.add('correct');
+        feedback.className = 'feedback correct-feedback';
+        feedback.innerHTML = `<div class="feedback-title">✅ Correct!</div><div class="explanation">${q.explanation}</div>`;
+        scores[lectureId].correct++;
+    } else {
+        buttons[chosenIndex].classList.add('wrong');
+        buttons[q.answer].classList.add('reveal-correct');
+        feedback.className = 'feedback wrong-feedback';
+        feedback.innerHTML = `<div class="feedback-title">❌ Incorrect</div><div class="explanation"><strong>Correct answer:</strong> ${String.fromCharCode(65 + q.answer)}) ${q.options[q.answer]}<br><br>${q.explanation}</div>`;
+        scores[lectureId].wrong++;
+    }
+
+    feedback.style.display = 'block';
+    scores[lectureId].answered++;
+    updateLectureStats(lectureId);
+    updateGlobalStats();
+}
+
+function renderLecture(lectureId) {
+    const container = document.getElementById(`questions-${lectureId}`);
+    const questions = quizData[lectureId];
+    container.innerHTML = '';
+
+    questions.forEach((q, qIndex) => {
+        const letters = ['A', 'B', 'C', 'D'];
+        const optionsHTML = q.options.map((opt, i) => `
+            <button class="option-btn" onclick="handleAnswer('${lectureId}', ${qIndex}, ${i})">
+                <span class="option-letter">${letters[i]}</span>
+                ${opt}
+            </button>
+        `).join('');
+
+        const card = document.createElement('div');
+        card.className = 'question-card';
+        card.id = `card-${lectureId}-${qIndex}`;
+        card.innerHTML = `
+            <div class="question-header">
+                <div class="question-number">${qIndex + 1}</div>
+                <div class="question-text">${q.q}</div>
+            </div>
+            <div class="options-container">${optionsHTML}</div>
+            <div class="feedback" id="feedback-${lectureId}-${qIndex}"></div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function resetLecture(lectureId) {
+    scores[lectureId] = { correct: 0, wrong: 0, answered: 0 };
+    renderLecture(lectureId);
+    updateLectureStats(lectureId);
+    updateGlobalStats();
+}
+
+// Initialize all lectures
+['lecture1', 'lecture2', 'lecture3', 'lecture4', 'lecture5'].forEach(id => {
+    renderLecture(id);
+    updateLectureStats(id);
+});
+updateGlobalStats();
+</script>
