@@ -1,0 +1,2696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Processing Quiz</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f1117;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1a1d2e, #2d1b69);
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom: 2px solid #4a3fa0;
+            box-shadow: 0 4px 20px rgba(74, 63, 160, 0.4);
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            color: #a78bfa;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        header p {
+            color: #9ca3af;
+            margin-top: 8px;
+            font-size: 0.95rem;
+        }
+
+        nav {
+            background: #1a1d2e;
+            padding: 15px 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            border-bottom: 1px solid #2d2f45;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav a {
+            color: #a78bfa;
+            text-decoration: none;
+            padding: 7px 15px;
+            border-radius: 20px;
+            border: 1px solid #4a3fa0;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        nav a:hover {
+            background: #4a3fa0;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .lecture-section {
+            margin-bottom: 60px;
+            background: #1a1d2e;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #2d2f45;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+        }
+
+        .lecture-header {
+            background: linear-gradient(135deg, #2d1b69, #1e3a5f);
+            padding: 20px 25px;
+            border-bottom: 2px solid #4a3fa0;
+        }
+
+        .lecture-header h2 {
+            color: #a78bfa;
+            font-size: 1.3rem;
+            letter-spacing: 1px;
+        }
+
+        .lecture-header p {
+            color: #7c83a0;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+
+        .questions-container {
+            padding: 20px 25px;
+        }
+
+        .question-card {
+            background: #12141f;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #2d2f45;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+
+        .question-card:hover {
+            border-color: #4a3fa0;
+        }
+
+        .question-header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .question-number {
+            background: #4a3fa0;
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .question-text {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #d1d5db;
+            font-weight: 500;
+        }
+
+        .options-container {
+            padding: 0 20px 16px 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .option-btn {
+            background: #1e2235;
+            border: 1px solid #2d2f45;
+            color: #c4c9d8;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 0.88rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: #252840;
+            border-color: #5b4fd0;
+            color: #e0e0e0;
+        }
+
+        .option-btn .option-letter {
+            background: #2d2f45;
+            color: #a78bfa;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .option-btn.correct {
+            background: #0d2d1a;
+            border-color: #22c55e;
+            color: #86efac;
+        }
+
+        .option-btn.correct .option-letter {
+            background: #22c55e;
+            color: #fff;
+        }
+
+        .option-btn.wrong {
+            background: #2d0d0d;
+            border-color: #ef4444;
+            color: #fca5a5;
+        }
+
+        .option-btn.wrong .option-letter {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .option-btn.reveal-correct {
+            background: #0d2d1a;
+            border-color: #22c55e;
+            color: #86efac;
+        }
+
+        .option-btn.reveal-correct .option-letter {
+            background: #22c55e;
+            color: #fff;
+        }
+
+        .option-btn:disabled {
+            cursor: default;
+        }
+
+        .feedback {
+            margin: 0 20px 16px 60px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            line-height: 1.6;
+            display: none;
+        }
+        .reference {
+            margin: 0 20px 16px 60px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            line-height: 1.6;
+            display: inline;
+        }
+
+        .reference .reference-title {
+            font-weight: bold;
+            margin-bottom: 4px;
+            display: inline;
+            align-items: center;
+            gap: 6px;
+        }
+        .feedback.correct-feedback {
+            background: #0d2d1a;
+            border: 1px solid #22c55e;
+            color: #86efac;
+        }
+
+        .feedback.wrong-feedback {
+            background: #2d0d0d;
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+        }
+
+        .feedback .feedback-title {
+            font-weight: bold;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .feedback .explanation {
+            color: #9ca3af;
+            margin-top: 6px;
+            font-size: 0.85rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 6px;
+        }
+
+        .progress-bar-container {
+            padding: 15px 25px;
+            background: #12141f;
+            border-top: 1px solid #2d2f45;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.82rem;
+            color: #7c83a0;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: #2d2f45;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4a3fa0, #a78bfa);
+            border-radius: 3px;
+            transition: width 0.4s ease;
+            width: 0%;
+        }
+
+        .score-display {
+            display: flex;
+            gap: 20px;
+            padding: 15px 25px;
+            background: #0f1117;
+            border-top: 1px solid #2d2f45;
+        }
+
+        .score-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+
+        .score-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .score-dot.correct-dot { background: #22c55e; }
+        .score-dot.wrong-dot { background: #ef4444; }
+        .score-dot.pending-dot { background: #4a3fa0; }
+
+        .reset-btn {
+            margin: 15px 25px;
+            padding: 8px 20px;
+            background: transparent;
+            border: 1px solid #4a3fa0;
+            color: #a78bfa;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            transition: all 0.3s ease;
+        }
+
+        .reset-btn:hover {
+            background: #4a3fa0;
+            color: #fff;
+        }
+
+        .global-stats {
+            background: #1a1d2e;
+            border: 1px solid #2d2f45;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .global-stats h3 {
+            color: #a78bfa;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-box {
+            background: #12141f;
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid #2d2f45;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #a78bfa;
+        }
+
+        .stat-label {
+            font-size: 0.78rem;
+            color: #7c83a0;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 600px) {
+            header h1 { font-size: 1.5rem; }
+            .options-container { padding-left: 20px; }
+            .feedback { margin-left: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>⚡ Social Data Analysis Quiz</h1>
+    <p>Test your knowledge across all 5 lectures</p>
+</header>
+
+<nav>
+    <a href="#lecture1">Lecture 1: Introduction</a>
+    <a href="#lecture2">Lecture 2: SDA Process</a>
+    <a href="#lecture3">Lecture 3: Text Analysis</a>
+    <a href="#lecture4">Lecture 4: Sentiment Analysis</a>
+    <a href="#lecture5">Lecture 5: Network Analysis</a>
+</nav>
+
+<div class="container">
+
+    <div class="global-stats">
+        <h3>📊 Overall Progress</h3>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-number" id="total-answered">0</div>
+                <div class="stat-label">Answered</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="total-correct" style="color:#22c55e">0</div>
+                <div class="stat-label">Correct</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="total-wrong" style="color:#ef4444">0</div>
+                <div class="stat-label">Wrong</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="total-percent">0%</div>
+                <div class="stat-label">Accuracy</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LECTURE 1 -->
+    <div class="lecture-section" id="lecture1">
+        <div class="lecture-header">
+            <h2>📘 Lecture 1: Introduction to Social Data Analysis</h2>
+        </div>
+        <div class="questions-container" id="questions-lecture1"></div>
+        <div class="progress-bar-container">
+            <div class="progress-info">
+                <span>Progress</span>
+                <span id="progress-text-lecture1">0 / 30</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill-lecture1"></div></div>
+        </div>
+        <div class="score-display">
+            <div class="score-item"><div class="score-dot correct-dot"></div><span id="correct-count-lecture1">0 Correct</span></div>
+            <div class="score-item"><div class="score-dot wrong-dot"></div><span id="wrong-count-lecture1">0 Wrong</span></div>
+            <div class="score-item"><div class="score-dot pending-dot"></div><span id="pending-count-lecture1">30 Remaining</span></div>
+        </div>
+        <button class="reset-btn" onclick="resetLecture('lecture1')">↺ Reset Lecture 1</button>
+    </div>
+
+    <!-- LECTURE 2 -->
+    <div class="lecture-section" id="lecture2">
+        <div class="lecture-header">
+            <h2>📗 Lecture 2: SDA Process</h2>
+        </div>
+        <div class="questions-container" id="questions-lecture2"></div>
+        <div class="progress-bar-container">
+            <div class="progress-info">
+                <span>Progress</span>
+                <span id="progress-text-lecture2">0 / 30</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill-lecture2"></div></div>
+        </div>
+        <div class="score-display">
+            <div class="score-item"><div class="score-dot correct-dot"></div><span id="correct-count-lecture2">0 Correct</span></div>
+            <div class="score-item"><div class="score-dot wrong-dot"></div><span id="wrong-count-lecture2">0 Wrong</span></div>
+            <div class="score-item"><div class="score-dot pending-dot"></div><span id="pending-count-lecture2">30 Remaining</span></div>
+        </div>
+        <button class="reset-btn" onclick="resetLecture('lecture2')">↺ Reset Lecture 2</button>
+    </div>
+
+    <!-- LECTURE 3 -->
+    <div class="lecture-section" id="lecture3">
+        <div class="lecture-header">
+            <h2>📙 Lecture 3: Text Analysis</h2>
+        </div>
+        <div class="questions-container" id="questions-lecture3"></div>
+        <div class="progress-bar-container">
+            <div class="progress-info">
+                <span>Progress</span>
+                <span id="progress-text-lecture3">0 / 30</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill-lecture3"></div></div>
+        </div>
+        <div class="score-display">
+            <div class="score-item"><div class="score-dot correct-dot"></div><span id="correct-count-lecture3">0 Correct</span></div>
+            <div class="score-item"><div class="score-dot wrong-dot"></div><span id="wrong-count-lecture3">0 Wrong</span></div>
+            <div class="score-item"><div class="score-dot pending-dot"></div><span id="pending-count-lecture3">30 Remaining</span></div>
+        </div>
+        <button class="reset-btn" onclick="resetLecture('lecture3')">↺ Reset Lecture 3</button>
+    </div>
+
+    <!-- LECTURE 4 -->
+    <div class="lecture-section" id="lecture4">
+        <div class="lecture-header">
+            <h2>📕 Lecture 4: Sentiment Analysis</h2>
+        </div>
+        <div class="questions-container" id="questions-lecture4"></div>
+        <div class="progress-bar-container">
+            <div class="progress-info">
+                <span>Progress</span>
+                <span id="progress-text-lecture4">0 / 30</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill-lecture4"></div></div>
+        </div>
+        <div class="score-display">
+            <div class="score-item"><div class="score-dot correct-dot"></div><span id="correct-count-lecture4">0 Correct</span></div>
+            <div class="score-item"><div class="score-dot wrong-dot"></div><span id="wrong-count-lecture4">0 Wrong</span></div>
+            <div class="score-item"><div class="score-dot pending-dot"></div><span id="pending-count-lecture4">30 Remaining</span></div>
+        </div>
+        <button class="reset-btn" onclick="resetLecture('lecture4')">↺ Reset Lecture 4</button>
+    </div>
+
+    <!-- LECTURE 5 -->
+    <div class="lecture-section" id="lecture5">
+        <div class="lecture-header">
+            <h2>📓 Lecture 5: Network Analysis</h2>
+        </div>
+        <div class="questions-container" id="questions-lecture5"></div>
+        <div class="progress-bar-container">
+            <div class="progress-info">
+                <span>Progress</span>
+                <span id="progress-text-lecture5">0 / 30</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill-lecture5"></div></div>
+        </div>
+        <div class="score-display">
+            <div class="score-item"><div class="score-dot correct-dot"></div><span id="correct-count-lecture5">0 Correct</span></div>
+            <div class="score-item"><div class="score-dot wrong-dot"></div><span id="wrong-count-lecture5">0 Wrong</span></div>
+            <div class="score-item"><div class="score-dot pending-dot"></div><span id="pending-count-lecture5">30 Remaining</span></div>
+        </div>
+        <button class="reset-btn" onclick="resetLecture('lecture5')">↺ Reset Lecture 5</button>
+    </div>
+
+</div>
+
+<script>
+const quizData = {
+lecture1: [
+    {
+        q: "Web 2.0 is best described as which of the following?",
+        options: [
+            "A technical upgrade to the HTTP protocol that improved page load speeds.",
+            "A change in how people use the web, enabling two-way and many-to-many information flow.",
+            "A government initiative to regulate online content creation.",
+            "The first version of the web that allowed static information presentation."
+        ],
+        answer: 1,
+        explanation: "Web 2.0 is not a technical standard update to Web 1.0, but rather reflects a shift in how people use the web — enabling user-generated content, two-way communication, and many-to-many information flow.",
+        reference: "Page 5"
+    },
+    {
+        q: "Which statement correctly differentiates the Internet from the Web?",
+        options: [
+            "The Internet is a subset of the Web.",
+            "The Web and the Internet are two different names for the same thing.",
+            "The Web is a subset of the Internet; the Internet contains the Web but is not limited to it.",
+            "The Internet only refers to email and file transfer, while the Web includes social media."
+        ],
+        answer: 2,
+        explanation: "The Web (WWW) is one of the services/technologies that run on the Internet. The Internet is the global network of interconnected devices, and the Web is just one part of it — not the other way around.",
+        reference: "Page 4"
+    },
+    {
+        q: "A student says: 'Web 3.0 is just a marketing name for Web 2.0 with better mobile support.' Based on the lecture, this statement is:",
+        options: [
+            "Correct, because Web 3.0 mainly focuses on responsive design.",
+            "Incorrect, because Web 3.0 is defined by machines being able to understand data, making it more intelligent, personalized, and decentralized.",
+            "Correct, because Web 3.0 still relies on user-generated content like Web 2.0.",
+            "Incorrect, because Web 3.0 eliminated user-generated content entirely."
+        ],
+        answer: 1,
+        explanation: "Web 3.0 goes far beyond mobile support. Its key characteristic is that data is not only created and consumed but also understood by machines, making it more intelligent, personalized, and decentralized compared to Web 2.0.",
+        reference: "Page 5"
+    },
+    {
+        q: "Social media is defined in the lecture as an application built upon which concept?",
+        options: [
+            "Web 1.0 — the read-only web.",
+            "Web 3.0 — the semantic web.",
+            "Web 2.0 — giving more control to the user over content.",
+            "Web 4.0 — the symbiotic web."
+        ],
+        answer: 2,
+        explanation: "Social media is considered an application of the Web 2.0 concept, which is built on the philosophy of giving users more control over content and enabling many-to-many communication.",
+        reference: "Page 7"
+    },
+    {
+        q: "Which of the following is NOT listed as a characteristic of social media in the lecture?",
+        options: [
+            "Participatory",
+            "Relationship Oriented",
+            "Centrally Controlled",
+            "Mass Collaboration"
+        ],
+        answer: 2,
+        explanation: "The lecture lists characteristics of social media as: Many-to-Many, Free and Easy to Use, Participatory, User Owned, Conversational, Relationship Oriented, Openness, and Mass Collaboration. 'Centrally Controlled' is the opposite of what social media stands for.",
+        reference: "Page 8"
+    },
+    {
+        q: "What is the key distinction between Internet-based and Smartphone-based social media platforms?",
+        options: [
+            "Internet-based platforms only work on desktop computers.",
+            "Smartphone-based platforms require a mobile phone number for authentication, while Internet-based platforms use email IDs.",
+            "Smartphone-based platforms have more features than Internet-based platforms.",
+            "Internet-based platforms cannot be accessed from smartphones."
+        ],
+        answer: 1,
+        explanation: "The differentiation is based on authentication mechanism. Smartphone-based platforms use mobile phone numbers to log in, while Internet-based platforms use email IDs. Importantly, an Internet-based platform can still be accessed via a smartphone app — the authentication method is what differs.",
+        reference: "Page 9"
+    },
+    {
+        q: "A platform where users who share a passion for photography gather to upload, view, and comment on each other's photos would be classified as which type of social media?",
+        options: [
+            "Social Networking Site (SNS)",
+            "Micro-blog",
+            "Content Community",
+            "Blog"
+        ],
+        answer: 2,
+        explanation: "Content Communities, such as YouTube and Flickr, are defined as platforms where 'a group of people coalescing online around an object of interest held in common.' A photography platform fits this definition perfectly.",
+        reference: "Page 10"
+    },
+    {
+        q: "Which of the following best describes a Blog, according to the lecture?",
+        options: [
+            "A platform solely focused on online social relationships between users.",
+            "A miniature version of messaging that allows brief text and image exchanges.",
+            "An online personal space where an individual or organization regularly posts content and expresses opinions.",
+            "A platform where groups gather around a shared object of interest."
+        ],
+        answer: 2,
+        explanation: "A Blog is defined as a type of online personal space or website where an individual or organization posts content and expresses opinions on matters of interest on a regular basis. It features interactivity, archives, subscription, and focus.",
+        reference: "Page 10"
+    },
+    {
+        q: "On Twitter, if User A 'follows' User B, which of the following is TRUE?",
+        options: [
+            "User B can automatically see all of User A's tweets.",
+            "User A's tweets will appear in User B's home timeline.",
+            "User B's tweets will appear in User A's home timeline.",
+            "User A and User B can only communicate through direct messages."
+        ],
+        answer: 2,
+        explanation: "Following means you subscribe to that person's tweets. So if User A follows User B, User B's tweets will appear in User A's home timeline — not the other way around.",
+        reference: "Page 11"
+    },
+    {
+        q: "What is a 'Retweet' on Twitter/X?",
+        options: [
+            "A public reply to someone's tweet visible to everyone.",
+            "A private message sent to another user.",
+            "A reposting of someone else's tweet or message.",
+            "A tweet that includes a hashtag to categorize content."
+        ],
+        answer: 2,
+        explanation: "A retweet is specifically defined as a reposting of someone else's tweet or message — it amplifies another user's content to your own followers.",
+        reference: "Page 11"
+    },
+    {
+        q: "Which of the following correctly explains the purpose of a Hashtag (#) on Twitter?",
+        options: [
+            "It is used to send a private message to a specific user.",
+            "It marks keywords or topics in a tweet, serving as an easy way to categorize messages.",
+            "It is used to follow a user's profile updates.",
+            "It indicates that a tweet has been retweeted by another user."
+        ],
+        answer: 1,
+        explanation: "The hashtag (#) symbol is used to mark keywords or topics in a tweet, making it an easy way to categorize messages and helping users find content related to specific topics.",
+        reference: "Page 11"
+    },
+    {
+        q: "Micro-blogging, as a type of social media, is best described as:",
+        options: [
+            "A full-featured blogging platform with long-form articles and comment sections.",
+            "A social networking site focused solely on professional relationships.",
+            "A miniature version of blogging that allows users to exchange brief messages including text, images, or links.",
+            "A content community platform centered around video sharing."
+        ],
+        answer: 2,
+        explanation: "Micro-blogging is described as a miniature version of blogging. Unlike traditional blogs with long-form content, micro-blogging platforms like Twitter allow users to exchange or publish brief messages including text, images, or links.",
+        reference: "Page 11"
+    },
+    {
+        q: "Social Media Analytics is described in the lecture as both 'an art' and 'a science.' Which pairing correctly matches each aspect?",
+        options: [
+            "Art = systematically identifying data; Science = interpreting insights for business goals.",
+            "Art = interpreting and aligning insights with business goals; Science = systematically identifying, extracting, and analyzing data.",
+            "Art = using sophisticated tools; Science = understanding audience behavior.",
+            "Art = collecting data from social platforms; Science = presenting findings in reports."
+        ],
+        answer: 1,
+        explanation: "The lecture explicitly states that the 'art' part is interpreting and aligning insights with business goals and objectives, while the 'science' part involves systematically identifying, extracting, and analyzing social media data using sophisticated tools and techniques.",
+        reference: "Page 13"
+    },
+    {
+        q: "What is the complete definition of Social Media Analytics as stated in the lecture?",
+        options: [
+            "'The process of collecting data from social media platforms to generate reports for management.'",
+            "'A tool used to count likes, shares, and followers on social media.'",
+            "'The art and science of extracting valuable hidden insights from vast amounts of social media data to enable informed and insightful decision making.'",
+            "'The technology used to monitor brand mentions and competitor activity in real time.'"
+        ],
+        answer: 2,
+        explanation: "The lecture provides a precise definition: Social Media Analytics is 'the art and science of extracting valuable hidden insights from vast amounts of social media data to enable informed and insightful decision making.' This definition captures both the qualitative (art) and quantitative (science) aspects.",
+        reference: "Page 13"
+    },
+    {
+        q: "What is the difference between Social Media Monitoring and Social Media Intelligence (SMI)?",
+        options: [
+            "They are identical; the lecture uses them interchangeably.",
+            "Monitoring is the process of tracking what audiences say, while SMI encompasses monitoring plus analysis to derive strategic solutions.",
+            "SMI only tracks brand mentions, while monitoring analyzes sentiment.",
+            "Monitoring uses AI tools, while SMI relies on manual human analysis."
+        ],
+        answer: 1,
+        explanation: "Social Media Monitoring is the ongoing process of tracking what audiences say (passive or active). Social Media Intelligence (SMI) goes further — it encompasses monitoring, collecting and analyzing content, and using the resulting insights to inform strategy. SMI uses both monitoring and analytics together.",
+        reference: "Page 14"
+    },
+    {
+        q: "The lecture warns that 'social media analytics', 'social media listening', and 'social media intelligence' are often used interchangeably but are not exactly the same. Which option best reflects this nuance?",
+        options: [
+            "All three terms are completely different and should never be associated.",
+            "Social media listening and monitoring are the same, but intelligence is different as it adds strategic analysis on top of both.",
+            "Social media analytics and intelligence are the same; only listening is different.",
+            "All three terms are completely synonymous and can be used interchangeably without any issue."
+        ],
+        answer: 1,
+        explanation: "The lecture explicitly says these terms are used interchangeably but aren't exactly the same. Monitoring/listening involves tracking and gathering, while intelligence adds the layer of analysis and strategic application. Analytics sits between them as the analytical process.",
+        reference: "Page 14"
+    },
+    {
+        q: "According to the lecture, which type of analytics would a company use to understand where its customers are physically located?",
+        options: [
+            "Text Analytics",
+            "Network Analytics",
+            "Action Analytics",
+            "Location Analytics"
+        ],
+        answer: 3,
+        explanation: "The lecture maps six types of analytics to specific questions. 'Where are they?' corresponds to Location Analytics. Text Analytics answers 'What they say?', Network Analytics answers 'How they network?', and Action Analytics answers 'What they do?'",
+        reference: "Page 15"
+    },
+    {
+        q: "A company wants to understand how customers navigate between different web pages on their site. Which analytics type from the lecture applies here?",
+        options: [
+            "Search Engine Analytics",
+            "Hyperlink Analytics",
+            "Text Analytics",
+            "Action Analytics"
+        ],
+        answer: 1,
+        explanation: "Hyperlink Analytics answers the question 'How they navigate?' — it deals with understanding navigation patterns through hyperlinks. This is distinct from Action Analytics ('What they do?') which is more behavior-focused.",
+        reference: "Page 15"
+    },
+    {
+        q: "Web 1.0 is characterized by which of the following information flow patterns?",
+        options: [
+            "Many-to-many, with user-generated content.",
+            "One-to-one, with personalized content delivery.",
+            "One-to-many, with static information presentation and read-only access.",
+            "Many-to-one, where users submit data to a central authority."
+        ],
+        answer: 2,
+        explanation: "Web 1.0 is described as static and read-only in nature. It allows only one-way information flow in a one-to-many fashion and is used purely for information presentation — not for generating or contributing content.",
+        reference: "Page 5"
+    },
+    {
+        q: "What role did APIs (Application Programming Interfaces) play in the context of Web 2.0 and Social Media?",
+        options: [
+            "APIs were used to encrypt user data on social media platforms.",
+            "APIs were a software intermediary allowing two applications to communicate, originating during the Web 2.0 era.",
+            "APIs replaced HTML as the main language for building websites.",
+            "APIs were developed exclusively for smartphone-based platforms."
+        ],
+        answer: 1,
+        explanation: "The lecture explains that the Web 2.0 era saw the origin of APIs — described as a software intermediary that allows two applications to communicate with one another. This was critical in enabling platforms and social media to interconnect.",
+        reference: "Page 6"
+    },
+    {
+        q: "Which of the following statements about Social Networking Sites (SNS) is most accurate according to the lecture?",
+        options: [
+            "SNS platforms are defined by users gathering around a shared object of interest.",
+            "SNS are solely focused on online social relationships among users.",
+            "SNS are miniature blogging platforms that allow brief message exchanges.",
+            "SNS are platforms where organizations post content and express opinions regularly."
+        ],
+        answer: 1,
+        explanation: "Social Networking Sites (SNS) are specifically defined in the lecture as types of social media platforms that are solely focused on online social relationships among users — distinguishing them from content communities (interest-based) and blogs (opinion/content-based).",
+        reference: "Page 10"
+    },
+    {
+        q: "If a social media platform requires a phone number to sign up and does not accept email-based registration, it falls under which category?",
+        options: [
+            "Internet-based social media",
+            "Content Community platform",
+            "Smartphone-based social media",
+            "Micro-blogging platform"
+        ],
+        answer: 2,
+        explanation: "The lecture distinguishes between Internet-based (email ID authentication) and Smartphone-based (mobile phone number authentication) social media. A platform requiring a phone number for sign-up is classified as Smartphone-based.",
+        reference: "Page 9"
+    },
+    {
+        q: "What does the term 'social media' literally mean based on the lecture's explanation of its etymology?",
+        options: [
+            "Online platforms where users can upload and download digital content freely.",
+            "The means through which a social network communicates, since 'media' is Latin for 'means'.",
+            "A collection of technologies enabling one-to-many broadcast communication.",
+            "A digital marketplace for exchanging social connections and professional contacts."
+        ],
+        answer: 1,
+        explanation: "The lecture explicitly breaks down the etymology: 'Media' is a Latin word for 'means.' Therefore, social media defines the means through which a social network communicates. This is the literal, definitional meaning given in the lecture.",
+        reference: "Page 6"
+    },
+    {
+        q: "Which of the following is the most accurate description of 'Social Media Monitoring' as defined in the lecture?",
+        options: [
+            "The use of AI to automatically respond to customer complaints on social platforms.",
+            "The ongoing process of tracking and gathering what the audience is saying on social media about a brand or its competitors.",
+            "A quarterly report generated from social media data to assess brand performance.",
+            "The process of creating content strategies based on competitor analysis."
+        ],
+        answer: 1,
+        explanation: "Social Media Monitoring is defined as the ongoing process of tracking and gathering what the audience is saying on social media — whether via hashtags, keywords, or other terms — about a brand or its competitors. It can be active (searching for mentions) or passive (listening to audience interests).",
+        reference: "Page 14"
+    },
+    {
+        q: "According to the course outline, which of the following topics is NOT covered in the Social Data Analytics course?",
+        options: [
+            "Social Bots",
+            "Web Scraping",
+            "Database Management Systems",
+            "Cascading Behavior"
+        ],
+        answer: 2,
+        explanation: "The course outline lists: Network Analytics, Action Analytics, Search Engines and Trend Analytics, Text Analytics & Sentiment Analysis, Social Network Analysis, Social Bots, Social Media Analytics Lifecycle, Web Scraping, Cascading Behavior, and Seven Layers of Social Media Analytics. Database Management Systems is not included.",
+        reference: "Page 2"
+    },
+    {
+        q: "A company monitors Twitter passively, observing general audience conversations without searching for specific brand mentions, to understand broad consumer interests. According to the lecture, this is an example of:",
+        options: [
+            "Active Social Media Monitoring",
+            "Passive Social Media Monitoring",
+            "Social Media Intelligence",
+            "Social Media Analytics"
+        ],
+        answer: 1,
+        explanation: "The lecture specifically distinguishes between active monitoring (searching for specific brand mentions) and passive monitoring (tuning into an audience to learn about their interests). The scenario described — observing general conversations without specific searches — is passive monitoring.",
+        reference: "Page 14"
+    },
+    {
+        q: "Web 4.0 is mentioned briefly in the lecture. What is its alternative name?",
+        options: [
+            "Semantic Web",
+            "Decentralized Web",
+            "Symbiotic Web",
+            "Intelligent Web"
+        ],
+        answer: 2,
+        explanation: "The lecture briefly mentions Web 4.0 (Read-Write-Execution-Concurrency) and notes it is also known as the Symbiotic Web. This is distinct from Web 3.0 which is associated with intelligence and decentralization.",
+        reference: "Page 5"
+    },
+    {
+        q: "A 'Direct Message' on Twitter/X differs from a regular tweet in which fundamental way?",
+        options: [
+            "Direct messages can contain images, while regular tweets cannot.",
+            "Direct messages are personal and seen only by the sender and recipient, while tweets are public and seen by everyone.",
+            "Direct messages are limited to 140 characters, while tweets can be unlimited.",
+            "Direct messages can only be sent to users who follow you back, but tweets can mention anyone."
+        ],
+        answer: 1,
+        explanation: "The lecture defines a tweet as a public message posted and seen by everyone via Twitter, while a direct message is specifically described as a personal tweet seen only by the sender and the recipient — the core distinction is public vs. private visibility.",
+        reference: "Page 11"
+    },
+    {
+        q: "The primary overarching purpose of Social Media Analytics, as stated in the lecture, is:",
+        options: [
+            "To increase a brand's number of followers across all platforms.",
+            "To enable informed and insightful decision making by leveraging social media data.",
+            "To automate the process of content creation for social media platforms.",
+            "To monitor and remove negative comments about a brand online."
+        ],
+        answer: 1,
+        explanation: "The lecture explicitly states the purpose of Social Media Analytics as: 'To enable informed and insightful decision making by leveraging social media data.' Secondary goals include knowing customers better through the six analytics types, but informed decision-making is the primary stated purpose.",
+        reference: "Page 15"
+    },
+    {
+        q: "A social media platform is open to any user, allows content creation and sharing by everyone in a many-to-many context, and is not proprietary to any brand. According to the lecture, can this platform be considered 'social media'?",
+        options: [
+            "No, because social media is limited to well-known platforms like Facebook and YouTube.",
+            "No, because social media must be proprietary and brand-specific.",
+            "Yes, because any online platform enabling users to participate, collaborate, create, and share in a many-to-many context qualifies as social media.",
+            "Yes, but only if it has more than one million active users."
+        ],
+        answer: 2,
+        explanation: "The lecture explicitly clarifies that social media is not limited to well-known platforms. Any online platform — proprietary or purpose-built — that enables users to participate, collaborate, create, and share content in a many-to-many context can be considered social media.",
+        reference: "Page 7"
+    }
+    
+],
+lecture2: [
+    {
+        q: "Social Data Analytics (SDA) goes beyond counting likes and shares. What does deep SDA actually focus on?",
+        options: [
+            "Maximizing the number of followers and post reach for a brand.",
+            "Counting replies, comments, and link clicks as the primary performance metrics.",
+            "Extracting insights into product strategy, customer journey, and brand reputation — understanding what drives the numbers.",
+            "Automating responses to customer complaints on social media platforms."
+        ],
+        answer: 2,
+        explanation: "The lecture explicitly states that while likes, shares, and even replies are important, deep SDA goes further — providing insights into product strategy, the customer journey, and brand reputation. It's not just about the numbers, but what's driving those numbers.",
+        reference: "Page 3"
+    },
+    {
+        q: "According to the lecture, social data sources are broader than just popular social networks. Which of the following best reflects this expanded definition?",
+        options: [
+            "Social data is strictly limited to platforms like Facebook, Instagram, and Twitter/X.",
+            "Social data can be found anywhere consumers interact with other consumers online, including blogs, review forums, news outlets, and messaging apps.",
+            "Social data only comes from platforms that require user authentication.",
+            "Social data is limited to smartphone-based platforms because they have the largest user base."
+        ],
+        answer: 1,
+        explanation: "The lecture warns that social data isn't limited to well-known social networks. Insights can be found anywhere on the web where consumers interact with consumers — broadening the definition to include blogs, review forums, news outlets, messaging apps, and more.",
+        reference: "Page 2"
+    },
+    {
+        q: "A key difference between Business Analytics data and Social Media Analytics data is that business analytics data is described as 'bureaucratic' while social media data is described as 'socialized.' What does this distinction mean?",
+        options: [
+            "Business analytics data is created by governments, while social media data is created by corporations.",
+            "Business analytics data is formal in nature and tightly controlled, while social media data is informal and flows freely without business control.",
+            "Business analytics data is always more accurate because it is structured and formal.",
+            "Social media data is bureaucratic because it is governed by platform terms of service."
+        ],
+        answer: 1,
+        explanation: "The lecture directly compares the two: Business Analytics data is formal in nature, tightly controlled by businesses, and stored in business-owned databases. Social media data is informal in nature, socialized, with no business control over it — it flows freely across the internet.",
+        reference: "Page 5"
+    },
+    {
+        q: "Which of the following is a characteristic of Business Analytics data that is NOT shared by Social Media Analytics data?",
+        options: [
+            "Data is high volume.",
+            "Data is real-time.",
+            "Data is stored in business-owned databases and bound within the business intranet.",
+            "Data is highly diverse and unstructured."
+        ],
+        answer: 2,
+        explanation: "Business Analytics data is stored in business-owned databases and is bound within the business intranet — making it private and internally confined. Social media data, by contrast, is boundary-less, stored in third-party databases, and freely shared over the internet.",
+        reference: "Page 5"
+    },
+    {
+        q: "The lecture states that in Social Media Analytics, 'more sharing creates greater value/impact,' while in Business Analytics, 'less sharing creates more value.' What underlying principle does this reflect?",
+        options: [
+            "Social media data gains value through wide distribution and network effects, while business data gains value through scarcity and exclusivity.",
+            "Social media data is more valuable because it is free, while business data is expensive.",
+            "Business data becomes worthless once shared, while social media data retains its value forever.",
+            "Social media data is more accurate when widely shared, while business data becomes inaccurate when shared."
+        ],
+        answer: 0,
+        explanation: "This reflects a fundamental economic difference: business data is competitive intelligence that loses its strategic advantage when shared (scarcity = value). Social media data gains value through network effects — the more it is shared, the greater its reach and impact.",
+        reference: "Page 5"
+    },
+    {
+        q: "Which of the following sample questions from the lecture would be answered using Social Media Analytics related to security and threat detection?",
+        options: [
+            "Which content posted on social media is resonating more with my customers?",
+            "Which social media platforms are driving the most traffic to our corporate website?",
+            "Are there indications of coordinated social engineering attacks targeting my employees?",
+            "What are the patterns of trending keywords over social media?"
+        ],
+        answer: 2,
+        explanation: "The lecture lists 'Are there indications of coordinated social engineering attacks targeting my employees?' as one of the sample questions SMA can answer — demonstrating that SMA has applications in cybersecurity and threat intelligence, not just marketing.",
+        reference: "Page 6"
+    },
+    {
+        q: "The three categories of challenges to Social Media Analytics listed in the lecture are:",
+        options: [
+            "Technical Challenges, Human Challenges, and Legal Challenges.",
+            "Data Collection, Big Data Characteristics, and Data Reliability.",
+            "Privacy Issues, Volume Issues, and Accuracy Issues.",
+            "API Challenges, Bot Challenges, and Ethical Challenges."
+        ],
+        answer: 1,
+        explanation: "The lecture organizes the challenges into exactly three groups: Data Collection challenges (privacy, ethics, transparency, API changes), Big Data Characteristics (volume, velocity, variety, complexity), and Data Reliability challenges (noise/spam, bots/fake accounts, fake news).",
+        reference: "Page 7"
+    },
+    {
+        q: "Which Big Data characteristic specifically refers to the speed at which social media data is generated and must be processed?",
+        options: [
+            "Data Volume — because massive amounts of data are produced.",
+            "Data Variety — because data comes in many formats.",
+            "Data Velocity — because data flows rapidly, requiring real-time or near real-time analysis.",
+            "Data Complexity — because data comes from diverse platforms with varying structures."
+        ],
+        answer: 2,
+        explanation: "Data Velocity specifically refers to the speed of data flow. The lecture defines it as data flowing rapidly and requiring real-time or near real-time analysis — distinguishing it from Volume (amount), Variety (format diversity), and Complexity (structural differences).",
+        reference: "Page 7"
+    },
+    {
+        q: "A social media analyst notices that a trending hashtag is being driven primarily by automated bot accounts, inflating its apparent popularity. Which challenge category from the lecture does this fall under?",
+        options: [
+            "Data Collection — specifically the API Changes challenge.",
+            "Big Data Characteristics — specifically the Data Complexity challenge.",
+            "Data Reliability — specifically the Bots and Fake Accounts challenge.",
+            "Data Collection — specifically the Transparency challenge."
+        ],
+        answer: 2,
+        explanation: "The lecture places 'Bots and Fake Accounts' under the Data Reliability challenge category, noting that the presence of bots and fake accounts can distort metrics and create misleading insights — exactly what is described in this scenario.",
+        reference: "Page 7"
+    },
+    {
+        q: "Which type of Social Media Analytics would be used to recommend the best marketing strategy to adopt based on analyzed social data?",
+        options: [
+            "Descriptive Analytics, because it summarizes what has happened.",
+            "Predictive Analytics, because it forecasts what will happen.",
+            "Prescriptive Analytics, because it suggests the best action to take when handling a scenario.",
+            "Diagnostic Analytics, because it identifies the root cause of a problem."
+        ],
+        answer: 2,
+        explanation: "Prescriptive Analytics is specifically defined in the lecture as the type that suggests the best action to take when handling a scenario. Descriptive Analytics describes past data, and Predictive Analytics forecasts future events — but only Prescriptive Analytics recommends action.",
+        reference: "Page 8"
+    },
+    {
+        q: "A marketing team generates a report with charts and graphs summarizing how customers reacted to a product launch on social media over the past month. This is an example of which type of SMA?",
+        options: [
+            "Prescriptive Analytics",
+            "Predictive Analytics",
+            "Descriptive Analytics",
+            "Diagnostic Analytics"
+        ],
+        answer: 2,
+        explanation: "Descriptive Analytics is focused on gathering and describing social media data in the form of reports, visualizations, and clustering to understand a business problem. Summarizing past reactions in charts and reports is precisely what descriptive analytics does.",
+        reference: "Page 8"
+    },
+    {
+        q: "An analyst uses accumulated historical social media data to forecast which products are likely to go viral next quarter. This is an example of:",
+        options: [
+            "Descriptive Analytics",
+            "Prescriptive Analytics",
+            "Predictive Analytics",
+            "Social Listening"
+        ],
+        answer: 2,
+        explanation: "Predictive Analytics involves analyzing large amounts of accumulated social media data to predict a future event. Forecasting which products will go viral next quarter is a classic predictive analytics use case.",
+        reference: "Page 8"
+    },
+    {
+        q: "The three stages of the Social Media Analytics process, in the correct order, are:",
+        options: [
+            "Understand → Capture → Present",
+            "Capture → Present → Understand",
+            "Capture → Understand → Present",
+            "Identify → Analyze → Visualize"
+        ],
+        answer: 2,
+        explanation: "The lecture explicitly describes social media analytics as a three-stage process in this exact order: (1) Capture — gather, preprocess, and extract data; (2) Understand — perform advanced analytics; (3) Present — summarize, evaluate, and present findings.",
+        reference: "Page 9"
+    },
+    {
+        q: "In the three-stage SMA process, advanced analytics like sentiment analysis, topic modeling, and social network analysis are performed during which stage?",
+        options: [
+            "Capture — because data must first be gathered before analysis.",
+            "Present — because findings are presented after analysis.",
+            "Understand — because this stage involves performing advanced analytics.",
+            "Identification — because the right data sources must be identified first."
+        ],
+        answer: 2,
+        explanation: "The 'Understand' stage (Stage 2) is where advanced analytics are performed, including sentiment analysis, topic modeling, social network analysis, and trend analysis. The Capture stage gathers data, and the Present stage summarizes and communicates the findings.",
+        reference: "Page 9"
+    },
+    {
+        q: "The Social Media Analytics Cycle is described as 'irrelative' and consists of how many steps?",
+        options: [
+            "Three steps: Capture, Understand, Present.",
+            "Four steps: Identify, Extract, Analyze, Interpret.",
+            "Five steps: Identification, Extraction, Cleaning, Analyzing, Visualization.",
+            "Six steps: Identification, Extraction, Cleaning, Analyzing, Visualization, Interpretation."
+        ],
+        answer: 3,
+        explanation: "The SMA Cycle is explicitly described as a six-step iterative process: (1) Identification, (2) Extraction, (3) Cleaning, (4) Analyzing, (5) Visualization, (6) Interpretation. Business Objectives sit at the center, informing each step.",
+        reference: "Page 10"
+    },
+    {
+        q: "What sits at the center of the Social Media Analytics Cycle and informs each step of the process?",
+        options: [
+            "The data extraction tools being used.",
+            "The business objectives to be achieved.",
+            "The type of analytics (descriptive, predictive, or prescriptive) selected.",
+            "The social media platform from which data is collected."
+        ],
+        answer: 1,
+        explanation: "The lecture specifically states that at the center of the analytics cycle are the desired business objectives that will inform each step. Business goals are defined at the initial stage, and the process continues until those objectives are fully satisfied.",
+        reference: "Page 10"
+    },
+    {
+        q: "Step 1 (Identification) of the SMA Cycle is labeled 'Art or Science?' in the lecture. Based on the lecture's content, why might Identification be considered the 'Art' part?",
+        options: [
+            "Because it uses sophisticated algorithms to find the best data sources automatically.",
+            "Because framing the right question and knowing what data to analyze requires judgment and intuition, not just technical skill.",
+            "Because it involves writing complex code to identify data patterns.",
+            "Because it requires expertise in database management and SQL queries."
+        ],
+        answer: 1,
+        explanation: "The Identification step is labeled 'Art or Science?' because framing the right question and knowing what data to analyze is extremely crucial and requires human judgment — it's not purely algorithmic. Asking the right question before any technical work begins is more of an art than a science.",
+        reference: "Page 11"
+    },
+    {
+        q: "Which of the following best describes the two dimensions used to categorize sources of social data in Step 1?",
+        options: [
+            "Quantitative vs Qualitative data.",
+            "Structured vs Unstructured data.",
+            "Private vs Public data, and Estimated vs Factual data.",
+            "Real-time vs Historical data, and Internal vs External data."
+        ],
+        answer: 2,
+        explanation: "The lecture lists exactly two source dimensions for social data in the Identification step: Private vs Public data (based on accessibility) and Estimated vs Factual data (based on the nature of the metric and its certainty).",
+        reference: "Page 11"
+    },
+    {
+        q: "A social media analyst wants to access private direct messages (DMs) on a platform without obtaining user authorization. According to the lecture, this is:",
+        options: [
+            "Acceptable if it is for academic research purposes.",
+            "A gray area that depends on the platform's terms of service.",
+            "Unethical and often illegal, as private data requires authorization or login credentials.",
+            "Legal as long as the data is anonymized before analysis."
+        ],
+        answer: 2,
+        explanation: "The lecture is explicit: private data is what only the owner of the social media profile can see, and accessing it requires authorization or login credentials. Accessing this data without authorization is described as both unethical and often illegal.",
+        reference: "Page 12"
+    },
+    {
+        q: "Public social media data (e.g., public tweets) is suitable for which primary analytical purpose, and what is its main limitation?",
+        options: [
+            "Suitable for deep individual behavioral analysis; limited by its lack of personal detail.",
+            "Suitable for broad analysis of trends, public sentiment, and marketing; limited by potential inaccuracies and the presence of bots or fake accounts.",
+            "Suitable for internal business reporting; limited by the volume of data available.",
+            "Suitable for predictive modeling; limited by the lack of historical data."
+        ],
+        answer: 1,
+        explanation: "The lecture states public data is generally used for broad analysis of trends, public sentiment, and widespread opinions for marketing, research, and public relations. However, it is subject to potential inaccuracies and the presence of bots or fake accounts.",
+        reference: "Page 12"
+    },
+    {
+        q: "A post's 'reach' metric (the estimated number of people who may have seen the post) is an example of which type of data source?",
+        options: [
+            "Factual data, because platforms calculate it precisely.",
+            "Private data, because reach information is only visible to the page owner.",
+            "Estimated data, because we are never certain who actually saw the content.",
+            "Public data, because anyone can see the post."
+        ],
+        answer: 2,
+        explanation: "The lecture uses 'Reach, Views' as examples of estimated metrics, noting we are never truly sure if someone has actually seen content unless we get a reaction from them. Estimated metrics reveal the behavior of the platform's algorithm and the distribution potential of content.",
+        reference: "Page 13"
+    },
+    {
+        q: "According to the lecture, why do estimated metrics (like reach and views) have special analytical value despite being less certain than factual metrics?",
+        options: [
+            "They are more accurate than factual metrics because they use machine learning.",
+            "They reveal the behavior of the network's algorithm and can show why content isn't generating actual interactions.",
+            "They are the only metrics available through social media APIs.",
+            "They directly measure user intent, making them more valuable for sales forecasting."
+        ],
+        answer: 1,
+        explanation: "The lecture states that estimated metrics have special value because they reveal the behavior of the algorithm of the network. When content struggles to get interactions, estimated metrics like reach help analysts understand distribution issues and work on improving content strategy.",
+        reference: "Page 13"
+    },
+    {
+        q: "In Step 2 (Extraction), what determines the method and tools suitable for data extraction?",
+        options: [
+            "The business objective and the available budget for analytics tools.",
+            "The type (e.g., text, numerical, or network) and size of the data.",
+            "The legal jurisdiction in which the company operates.",
+            "The number of social media platforms being analyzed simultaneously."
+        ],
+        answer: 1,
+        explanation: "The lecture explicitly states that 'the type (e.g., text, numerical, or network) and size of data will determine the method and tools suitable for extraction.' Different data types require different extraction approaches.",
+        reference: "Page 14"
+    },
+    {
+        q: "What are the two methods described in the lecture for gathering human-action data from social media platforms during the Extraction step?",
+        options: [
+            "Manual collection and automated database queries.",
+            "Via API (Application Programming Interface) and Web crawling or scraping.",
+            "Public data portals and private data subscriptions.",
+            "Text mining and image recognition."
+        ],
+        answer: 1,
+        explanation: "The lecture specifies exactly two methods for pulling human-action information from social media platforms: (1) Via API — using sets of routines/protocols set up by social media companies to allow access to portions of their data, and (2) Web crawling or scraping.",
+        reference: "Page 14"
+    },
+    {
+        q: "Web scraping is defined in the lecture as:",
+        options: [
+            "Manually downloading data files from social media platform dashboards.",
+            "The automated extraction of data from websites, converting unstructured HTML into structured formats like CSV or SQL.",
+            "The use of APIs to access data hosted in social media companies' databases.",
+            "A technique for removing noise and irrelevant content from collected social data."
+        ],
+        answer: 1,
+        explanation: "Web scraping is explicitly defined as the automated extraction of data from websites, converting unstructured HTML into structured formats like CSV or SQL for purposes such as analysis, competitive intelligence, or research. It involves sending HTTP requests and parsing HTML.",
+        reference: "Page 15"
+    },
+    {
+        q: "According to the lecture, scraping data that is behind a login page (i.e., not publicly accessible) falls into which legal zone?",
+        options: [
+            "Green Zone — legal because all online data is public property.",
+            "Gray Area — depends on the website's terms of service.",
+            "Red Zone — illegal because it involves accessing private or protected data, and bypassing security moves scraping into hacking.",
+            "Blue Zone — acceptable if used for academic research."
+        ],
+        answer: 2,
+        explanation: "The lecture's legal framework has three zones. Scraping private/copyrighted data behind logins is the Red Zone — it is illegal. Bypassing security using black hat techniques moves the activity from 'scraping' to 'hacking.' The Green Zone is public data not behind login, and the Gray Area involves sites with terms of service banning bots.",
+        reference: "Page 15"
+    },
+    {
+        q: "What is the robots.txt file, and what is its significance for ethical web scraping?",
+        options: [
+            "A programming file that automatically blocks all bots from accessing a website.",
+            "A legal contract between a website and web scrapers defining data usage rights.",
+            "A simple text file on a website's server that tells web crawlers which parts of the site they are allowed or forbidden to visit.",
+            "A configuration file used by APIs to limit the rate of data requests."
+        ],
+        answer: 2,
+        explanation: "The lecture defines robots.txt as a website's digital gatekeeper — a simple text file that lives on a website's server to tell web crawlers which parts of the site are allowed and which are off-limits. The lecture states: respecting robots.txt is the difference between being a 'Data Scientist' and being a 'Malicious Bot.'",
+        reference: "Page 16"
+    },
+    {
+        q: "A scraper sends thousands of rapid requests per second to a website's server, causing it to slow down and crash. According to the lecture's ethical guidelines, what should have been done to prevent this?",
+        options: [
+            "Used a VPN to mask the scraper's identity.",
+            "Checked the website's privacy policy before scraping.",
+            "Applied Rate Limiting — throttling requests by adding delays to avoid overloading the target server.",
+            "Used only the website's API instead of scraping."
+        ],
+        answer: 2,
+        explanation: "The lecture explicitly lists Rate Limiting as an essential ethical consideration: 'Throttle requests (e.g., adding delays) to avoid crashing the target website's servers.' Sending requests at high speed without limits is an unethical practice that can harm the target website.",
+        reference: "Page 16"
+    },
+    {
+        q: "Step 3 (Cleaning) is described in the lecture as removing unwanted data. Which statement about the Cleaning step is TRUE?",
+        options: [
+            "All extracted data must go through extensive cleaning before analysis.",
+            "Cleaning can only be performed manually by human analysts to ensure accuracy.",
+            "Coding and filtering during cleaning can be performed by machines (automated) or manually by humans, and some data may need less cleaning than others.",
+            "The Cleaning step replaces the need for the Extraction step if data is already structured."
+        ],
+        answer: 2,
+        explanation: "The lecture notes two important nuances about Cleaning: first, some data may need a lot of cleaning while others can go into analysis directly; second, coding and filtering can be performed by machines (automated) or manually by humans — it is not exclusively one or the other.",
+        reference: "Page 17"
+    },
+    {
+        q: "Step 4 (Analyzing) states that the approach taken during analysis will 'greatly vary.' What two factors determine this variation?",
+        options: [
+            "The size of the dataset and the number of analysts available.",
+            "The type of social media analytics under consideration and the tools and algorithms employed.",
+            "The business budget and the time constraints of the project.",
+            "The social media platform being analyzed and the geographic region of the data."
+        ],
+        answer: 1,
+        explanation: "The lecture explicitly states that 'depending on the type of social media analytics under consideration and the tools and algorithm employed, the steps and approach you take will greatly vary.' The overall objective remains constant: extract meaningful insights without the data losing its integrity.",
+        reference: "Page 18"
+    },
+    {
+        q: "According to the lecture, what is the primary reason effective visualization is particularly valuable when dealing with complex and large social media datasets?",
+        options: [
+            "Visualization makes data easier to share on social media platforms.",
+            "Visualization reduces the size of the dataset, making it faster to process.",
+            "Visualization can reveal hidden patterns, relationships, and trends that are difficult to detect otherwise, and demonstrates the value of social media data to top management.",
+            "Visualization eliminates the need for the Cleaning and Analyzing steps."
+        ],
+        answer: 2,
+        explanation: "The lecture states that the science of effective visualization is particularly helpful with complex and huge data because it can reveal hidden patterns, relationships, and trends. It also emphasizes that effective visualization demonstrates the value of social media data to top management.",
+        reference: "Page 19"
+    },
+    {
+        q: "A data analyst wants to visualize WHO users are interacting with on a social media platform. According to the lecture, which visualization type is most appropriate?",
+        options: [
+            "Text cloud — for topical (what) data.",
+            "Interactive maps — for geospatial (where) data.",
+            "Following network — for network (with whom) data.",
+            "Google Trends data — for temporal (when) data."
+        ],
+        answer: 2,
+        explanation: "The lecture maps data types to visualization methods. Network data (with whom) corresponds to a following network visualization. Text clouds are for topical data, interactive maps for geospatial data, and Google Trends-style charts for temporal data.",
+        reference: "Page 19"
+    },
+    {
+        q: "Step 6 (Interpretation) is identified as the 'art' part of social media analytics. Why is interpretation considered 'art' rather than 'science'?",
+        options: [
+            "Because it uses the most advanced machine learning algorithms.",
+            "Because it relies on automated tools that interpret data without human input.",
+            "Because it relies on human judgment to translate analytics results into meaningful business insights, especially with descriptive analytics that leave room for different interpretations.",
+            "Because it is the final step and requires the least technical skill."
+        ],
+        answer: 2,
+        explanation: "The lecture explicitly labels Interpretation as 'the art part of social media analytics.' It relies on human judgment — not algorithms — to interpret valuable knowledge from visual data. It is especially critical with descriptive analytics, which can be interpreted in multiple ways depending on context and human insight.",
+        reference: "Page 20"
+    },
+    {
+        q: "A company scrapes publicly accessible product reviews from a competitor's e-commerce site for competitive analysis. According to the lecture's legal framework, this activity most likely falls in which zone?",
+        options: [
+            "Red Zone — because scraping any competitor data is always illegal.",
+            "Green Zone — because the data is publicly accessible and not behind a login.",
+            "Gray Area — if the site's Terms of Service prohibit automated bots, but the data itself is public.",
+            "Both Green Zone and Gray Area depending on what the site's robots.txt and Terms of Service say."
+        ],
+        answer: 3,
+        explanation: "The lecture describes a nuanced legal landscape. Scraping public data is the Green Zone, but most websites also have Terms of Service prohibiting automated access (Gray Area). The robots.txt file also matters. Therefore, scraping publicly accessible data can be Green Zone or Gray Area depending on what the site's specific rules say — making option D the most complete and accurate answer.",
+        reference: "Page 15-16"
+    }
+],
+lecture3: [
+    {
+        q: "What is the simplest way to explain text analytics as described in the lecture?",
+        options: [
+            "The process of reading and manually categorizing social media posts by human analysts.",
+            "The method of turning text into numbers, similar in structure to a spreadsheet, so that statistics and other types of analysis can be run on the data.",
+            "A technique for automatically translating multilingual social media content into a single language.",
+            "The process of visually representing text data using word clouds and infographics."
+        ],
+        answer: 1,
+        explanation: "The lecture describes text analytics in its simplest form as 'the method of turning text into numbers, similar in structure to a spreadsheet so that statistics and other types of analysis can be run on the data.' This conversion from unstructured text to structured numerical format is the core concept.",
+        reference: "Page 4"
+    },
+    {
+        q: "Text analytics is also known as:",
+        options: [
+            "Natural Language Processing (NLP).",
+            "Text mining.",
+            "Semantic analysis.",
+            "Linguistic profiling."
+        ],
+        answer: 1,
+        explanation: "The lecture explicitly states that text analytics is 'also known as text mining' — defined as a technique to extract, analyze, and interpret hidden business insights from textual elements.",
+        reference: "Page 4"
+    },
+    {
+        q: "According to the lecture, which widely used technology is powered by text analytics without most people realizing it?",
+        options: [
+            "Social media recommendation algorithms.",
+            "Smartphone autocorrect systems.",
+            "Google search engine — and all search engines.",
+            "Online advertising bidding systems."
+        ],
+        answer: 2,
+        explanation: "The lecture specifically states that 'the Google search engine — and all search engines — is powered by text analytics,' noting that most people do not realize the rich intelligence that can be extracted from text documents.",
+        reference: "Page 4"
+    },
+    {
+        q: "Why does the volume and speed of social media text generation make manual reading insufficient?",
+        options: [
+            "Because social media text is multilingual and cannot be read by a single analyst.",
+            "Because social media content is protected by copyright and cannot be manually accessed.",
+            "Because the volume and speed at which texts are generated does not allow for manual reading, calling for advanced text analysis techniques.",
+            "Because manual reading introduces bias that skews analytical results."
+        ],
+        answer: 2,
+        explanation: "The lecture explicitly states that 'the volume and speed at which texts over social media are generated does not allow for manual reading, and calls for advanced text analysis techniques.' This is the primary justification for automated text analytics.",
+        reference: "Page 5"
+    },
+    {
+        q: "Text analytics has roots in which combination of domains?",
+        options: [
+            "Statistics, psychology, and computer engineering.",
+            "Data mining, machine learning, and natural language processing.",
+            "Sociology, linguistics, and database management.",
+            "Business intelligence, web design, and information security."
+        ],
+        answer: 1,
+        explanation: "The lecture states that 'text analytics has roots in a variety of domains, including data mining, machine learning, natural language processing, etc.' These three fields form the interdisciplinary foundation of text analytics.",
+        reference: "Page 5"
+    },
+    {
+        q: "Knowing a topic is popular on social media is NOT sufficient on its own. What additional insight does text analytics provide?",
+        options: [
+            "It tells you how many users are actively discussing the topic.",
+            "It identifies which geographic regions the topic is trending in.",
+            "It tells you whether the popularity is a good or bad thing — whether to celebrate or brace for a crisis.",
+            "It predicts how long the topic will remain popular."
+        ],
+        answer: 2,
+        explanation: "The lecture uses a clear example: 'Knowing a topic is popular doesn't tell you whether that's a good thing or a bad thing. Should you celebrate, or brace for a crisis? Text analytics tells you.' Sentiment and context matter beyond simple volume metrics.",
+        reference: "Page 5"
+    },
+    {
+        q: "In the Text Analytics steps, what role does the business question play during the Identification and Extraction stage?",
+        options: [
+            "It determines the sentiment scoring method to be used.",
+            "It serves as a good starting point for finding the right data source.",
+            "It defines the preprocessing rules for cleaning the text.",
+            "It specifies the visualization format for presenting results."
+        ],
+        answer: 1,
+        explanation: "The lecture states that 'the desired business question that needs to be answered with text analytics will serve as a good starting point' during Identification and Extraction. The genre of the source text also determines the type of tool used for extraction.",
+        reference: "Page 6"
+    },
+    {
+        q: "Social media text is described in the lecture using five characteristics that make finding the right source crucial. What are these five characteristics?",
+        options: [
+            "Large, fast, global, digital, and searchable.",
+            "Dynamic, huge, diverse, multilingual, and noisy.",
+            "Unstructured, real-time, public, informal, and brief.",
+            "Textual, visual, audio, interactive, and hyperlinked."
+        ],
+        answer: 1,
+        explanation: "The lecture explicitly lists that text posted on social media is 'dynamic, huge, diverse, multilingual, and noisy' — making finding the right source for text analytics very crucial for gaining useful business insights.",
+        reference: "Page 6"
+    },
+    {
+        q: "During the Text Parsing and Filtering step, which of the following operations is performed to prepare text for computer analysis?",
+        options: [
+            "Converting text into audio files for speech recognition processing.",
+            "Translating multilingual text into a single standardized language.",
+            "Determining sentence structures, extracting named entities, removing stop words, and checking spellings — then transforming text into a computer-readable format.",
+            "Ranking texts by relevance score before feeding them to the algorithm."
+        ],
+        answer: 2,
+        explanation: "The lecture describes Text Parsing and Filtering as: determining sentence structures and parts of speech, extracting named entities (people, organizations, product names), removing stop words, and checking spellings. The cleaned text is then transformed into a computer-readable format for analysis.",
+        reference: "Page 7"
+    },
+    {
+        q: "Which of the following are the three main challenges of Text Analytics for social media data, as categorized in the lecture?",
+        options: [
+            "Accuracy, Speed, and Cost.",
+            "Volume & Velocity, Diversity, and Unstructuredness.",
+            "Privacy, Legality, and Multilingualism.",
+            "Noise, Bias, and Data Scarcity."
+        ],
+        answer: 1,
+        explanation: "The lecture organizes text analytics challenges into exactly three categories: (1) Volume and Velocity — massive data generated swiftly; (2) Diversity — multilingual, diverse users across time and space; (3) Unstructuredness — dubious grammar, abbreviations, acronyms, and emoticons.",
+        reference: "Page 8"
+    },
+    {
+        q: "The 'Unstructuredness' challenge in social media text analytics specifically refers to:",
+        options: [
+            "The lack of consistent formatting across different social media platforms.",
+            "The difficulty of storing large volumes of text in relational databases.",
+            "Dubious grammatical structure laden with abbreviations, acronyms, and emoticons that challenge business intelligence extraction.",
+            "The absence of metadata associated with social media posts."
+        ],
+        answer: 2,
+        explanation: "The lecture defines Unstructuredness specifically as social media data having 'dubious grammatical structure, and is laden with abbreviations, acronyms, and emoticons,' which represents a great challenge for extracting business intelligence — not just formatting inconsistency.",
+        reference: "Page 8"
+    },
+    {
+        q: "A corporate annual report stored as a PDF is an example of which type of social media text?",
+        options: [
+            "Dynamic text, because it is generated digitally.",
+            "Static text, because it is large in length and updated or deleted less frequently.",
+            "Dynamic text, because it contains opinions and evaluations.",
+            "Neither — it does not qualify as social media text."
+        ],
+        answer: 1,
+        explanation: "The lecture classifies text into dynamic and static. Static text is 'usually large in length and generated, updated, or deleted less frequently.' The lecture lists Word documents and corporate reports as explicit examples of static text.",
+        reference: "Page 9"
+    },
+    {
+        q: "What is the key structural difference between dynamic text and static text in social media?",
+        options: [
+            "Dynamic text is always public, while static text is always private.",
+            "Dynamic text is smaller in length, diverse, and updated/deleted more frequently; static text is larger and updated/deleted less frequently.",
+            "Dynamic text uses hashtags, while static text uses formal citations.",
+            "Dynamic text is machine-generated, while static text is human-generated."
+        ],
+        answer: 1,
+        explanation: "The lecture contrasts the two types precisely: Dynamic text is 'usually smaller in length (e.g., a couple of sentences), diverse in nature, and updated or deleted more frequently,' while Static text is 'usually large in length (e.g., several paragraphs) and generated, updated, or deleted less frequently.'",
+        reference: "Page 9"
+    },
+    {
+        q: "Which of the following is listed as an example of STATIC social media text?",
+        options: [
+            "A tweet reacting to breaking news.",
+            "A comment on a Facebook post.",
+            "A product review on Amazon.",
+            "A wiki article or blog page."
+        ],
+        answer: 3,
+        explanation: "The lecture explicitly lists static text examples as: 'wiki content, a blog page, Word documents, corporate reports, electronic mail (e-mail), and news transcripts.' Tweets, comments, and reviews are classified as dynamic text.",
+        reference: "Page 9"
+    },
+    {
+        q: "Why are most textual conversations (chats) on social media NOT typically subject to text mining?",
+        options: [
+            "Because conversations are too short to extract meaningful insights from.",
+            "Because most textual conversation is private in nature and may not be subject to mining.",
+            "Because conversations use too many emoticons that algorithms cannot process.",
+            "Because chat platforms do not allow third-party API access."
+        ],
+        answer: 1,
+        explanation: "The lecture notes that Conversations (also known as chatting) involve 'instant exchange of short written messages between two or more people,' and critically states that 'most of the textual conversation is private in nature and may not be subject to mining.'",
+        reference: "Page 10"
+    },
+    {
+        q: "What makes tweets a particularly valuable source for text analytics, according to the lecture?",
+        options: [
+            "Tweets are always longer than other forms of social media text, providing more data.",
+            "Tweets provide a valuable source for mining business insights including exploring trending topics, measuring brand sentiment, and gathering feedback on products and services.",
+            "Tweets are the only form of dynamic text that is consistently public.",
+            "Tweets use a standardized format that makes them the easiest to parse algorithmically."
+        ],
+        answer: 1,
+        explanation: "The lecture specifically states that tweets 'provide a valuable source for mining value business insights, including exploring trending topics, measuring brand sentiment, and gathering feedback on new products and services' — making them analytically rich despite their brevity.",
+        reference: "Page 10"
+    },
+    {
+        q: "The four text analysis algorithms described in the lecture are:",
+        options: [
+            "Tokenization, Stemming, Lemmatization, and Named Entity Recognition.",
+            "Classification, Clustering, Association, and Sentiment Analysis.",
+            "Parsing, Filtering, Scoring, and Interpretation.",
+            "Supervised Learning, Unsupervised Learning, Reinforcement Learning, and Deep Learning."
+        ],
+        answer: 1,
+        explanation: "The lecture lists exactly four text analysis algorithms: (1) Classification — grouping texts with predefined labels; (2) Clustering — grouping by similarity in non-overlapping groups; (3) Association — probability of co-occurrence; (4) Sentiment Analysis — extracting subjective information using NLP.",
+        reference: "Page 12"
+    },
+    {
+        q: "What is the fundamental difference between Classification and Clustering as text analysis algorithms?",
+        options: [
+            "Classification uses machine learning while Clustering uses statistical methods.",
+            "Classification groups texts with predefined labels, while Clustering groups texts based on similarity without predefined labels.",
+            "Classification is used for short texts like tweets, while Clustering is used for long documents.",
+            "Classification detects emotions, while Clustering detects topics."
+        ],
+        answer: 1,
+        explanation: "The lecture distinguishes these two clearly: Classification 'finds similarities in texts and groups them with predefined labels' (e.g., spam/not-spam), while Clustering 'groups texts based on similarity in non-overlapping groups' without predefined categories (e.g., grouping tweets into positive, negative, neutral groups that emerge naturally).",
+        reference: "Page 12"
+    },
+    {
+        q: "A recommendation system finds that users who liked social media content A and B are 90% likely to also like content C. Which text analysis algorithm is being applied?",
+        options: [
+            "Classification — because content is being labeled.",
+            "Clustering — because users are being grouped by behavior.",
+            "Association — because it determines the probability of co-occurrence of items.",
+            "Sentiment Analysis — because user preferences are being analyzed."
+        ],
+        answer: 2,
+        explanation: "The lecture defines Association as an algorithm that 'determines the probability of the co-occurrence of items in a collection of texts,' and uses exactly this type of example: 'a user who liked social media content A and B is 90% likely to also like content C.'",
+        reference: "Page 12"
+    },
+    {
+        q: "Opinion Mining (Sentiment Analysis) is defined in the lecture as:",
+        options: [
+            "The process of identifying trending topics by counting keyword frequency in text.",
+            "The process of computationally determining whether a piece of writing is positive, negative, or neutral.",
+            "The technique of extracting named entities (people, organizations) from text data.",
+            "The method of grouping user-generated content by topic using unsupervised learning."
+        ],
+        answer: 1,
+        explanation: "The lecture defines Opinion Mining/Sentiment Analysis as 'the process of computationally determining whether a piece of writing is positive, negative or neutral.' It uses NLP to extract subjective information and aims to determine the attitude of an opinion holder with respect to some topic.",
+        reference: "Page 13"
+    },
+    {
+        q: "In Opinion Mining, polarity values are typically assigned on which scale?",
+        options: [
+            "A scale from 0 to 100, where 100 is very positive.",
+            "A binary scale: 0 for negative and 1 for positive.",
+            "The [-1, 1] interval, where 1 is very positive and -1 is very negative.",
+            "A 5-point scale from 1 (very negative) to 5 (very positive)."
+        ],
+        answer: 2,
+        explanation: "The lecture explicitly states: 'Usually, we assign a polarity value to a text. This value is usually in the [-1, 1] interval, 1 being very positive, -1 very negative.' This continuous scale allows for nuanced sentiment measurement.",
+        reference: "Page 13"
+    },
+    {
+        q: "Which of the following is listed as a BENEFIT of Sentiment Analysis in the lecture?",
+        options: [
+            "It eliminates the need for human interpretation of social data.",
+            "It replaces traditional surveys and focus groups for customer research.",
+            "It enables real-time analysis, automation at scale, and processing of huge quantities of unstructured data.",
+            "It provides legally admissible evidence of customer opinion for business disputes."
+        ],
+        answer: 2,
+        explanation: "The lecture lists three key benefits of Sentiment Analysis: (1) Automation — analyzes hundreds of megabytes of text in minutes; (2) Processes data at scale — handles huge quantities of unstructured data; (3) Real-Time Analysis — identifies issues that need immediate attention.",
+        reference: "Page 14"
+    },
+    {
+        q: "The review 'I can't not buy another Apple Mac' is given as an example of which Sentiment Analysis challenge?",
+        options: [
+            "Idioms — because 'can't not buy' is an idiomatic expression.",
+            "Irony & Sarcasm — because the sentence seems contradictory.",
+            "Negation — because the double negative expresses a positive intention that machines need to recognize.",
+            "Emojis — because the sentiment is conveyed through implied symbols."
+        ],
+        answer: 2,
+        explanation: "The lecture uses 'I can't not buy another Apple Mac' as an example of the Negation challenge, noting it must be recognized because the double negative ('can't not') actually states a positive intention. Machines struggle with detecting how negations flip sentiment meaning.",
+        reference: "Page 15"
+    },
+    {
+        q: "Which Sentiment Analysis challenge is illustrated by the phrase 'not my cup of tea'?",
+        options: [
+            "Negation — because it contains the word 'not'.",
+            "Sarcasm — because it is a disguised criticism.",
+            "Idioms — because the phrase uses figurative language that doesn't carry its literal meaning.",
+            "Unstructuredness — because it uses informal language."
+        ],
+        answer: 2,
+        explanation: "The lecture uses 'not my cup of tea' as an example of the Idioms challenge, noting these 'need to be included in training.' Idioms use figurative language where the literal meaning differs completely from the intended meaning, making them hard for algorithms to interpret correctly.",
+        reference: "Page 15"
+    },
+    {
+        q: "Why is irony and sarcasm particularly tough for Sentiment Analysis machines to handle?",
+        options: [
+            "Because irony and sarcasm always include negation words that confuse algorithms.",
+            "Because people use positive words to describe negative experiences, making the surface polarity misleading.",
+            "Because irony is too culturally specific to be included in training datasets.",
+            "Because sarcasm is only detectable through tone of voice, not written text."
+        ],
+        answer: 1,
+        explanation: "The lecture specifically states that irony and sarcasm are 'tough for machines' because 'people use positive words to describe negative experiences.' The surface-level positive language contradicts the actual negative sentiment, creating a classification challenge for algorithms.",
+        reference: "Page 15"
+    },
+    {
+        q: "How does the lecture suggest handling Audiovisual Content as a Sentiment Analysis challenge?",
+        options: [
+            "Audiovisual content should be excluded from sentiment analysis entirely.",
+            "Video and audio should be manually reviewed by human analysts before analysis.",
+            "A speech-to-text algorithm should be used since video and audio are a very different type of data from text.",
+            "Image recognition algorithms should be applied to extract sentiment from visual content."
+        ],
+        answer: 2,
+        explanation: "The lecture notes that 'Video and audio are a very different type of data to text' and suggests using a 'Speech-to-text algorithm' to bridge this gap — converting audio content into text that can then be processed by standard text analytics techniques.",
+        reference: "Page 15"
+    },
+    {
+        q: "In the Sentiment Analysis Process, what happens during the Preprocessing step?",
+        options: [
+            "Sentiment scores are assigned to each text segment.",
+            "The polarity of the entire document is classified as positive, negative, or neutral.",
+            "URLs, hashtags, RT, @ handles, stop words, and numbers are removed; slangs and emoticons are replaced; spelling is corrected.",
+            "Subjective expressions are identified and retained while objective ones are discarded."
+        ],
+        answer: 2,
+        explanation: "The lecture describes Preprocessing as cleaning texts before analysis: 'URLs, #, RT, @ handles, stop words, numbers are removed, while slangs, emoticons are replaced, spelling correction.' This is distinct from Sentiment Detection (subjectivity examination) which comes next.",
+        reference: "Page 16"
+    },
+    {
+        q: "What is the purpose of the Sentiment Detection step in the Sentiment Analysis process?",
+        options: [
+            "To assign a numerical polarity score between -1 and 1 to each piece of text.",
+            "To perform subjectivity examination — retaining subjective expressions and discarding objective ones.",
+            "To choose the appropriate categorization scheme such as a 5-star rating.",
+            "To collect data from social media platforms for subsequent analysis."
+        ],
+        answer: 1,
+        explanation: "The lecture defines Sentiment Detection as 'subjectivity examination' where 'subjective expressions are retained and objective ones are discarded.' This step filters the data to focus only on opinion-bearing text before classification occurs.",
+        reference: "Page 16"
+    },
+    {
+        q: "The correct order of the five steps in the Sentiment Analysis Process is:",
+        options: [
+            "Preprocessing → Data Collection → Sentiment Detection → Sentiment Classification → Sentiment Scores → Interpretation.",
+            "Data Collection → Preprocessing → Sentiment Detection → Sentiment Classification → Sentiment Scores → Interpretation.",
+            "Data Collection → Sentiment Detection → Preprocessing → Sentiment Classification → Interpretation → Sentiment Scores.",
+            "Identification → Extraction → Cleaning → Sentiment Detection → Scoring → Interpretation."
+        ],
+        answer: 1,
+        explanation: "The lecture presents a clear six-step process: (1) Data Collection, (2) Preprocessing, (3) Sentiment Detection, (4) Sentiment Classification, (5) Sentiment Scores/Classes, and (6) Interpretation. The order matters — you cannot detect or classify sentiment before cleaning and preprocessing the data.",
+        reference: "Page 16"
+    },
+    {
+        q: "Subjectivity/Objectivity as a Sentiment Scoring Type allocates text into which two categories?",
+        options: [
+            "Positive or Negative.",
+            "Strong or Weak sentiment.",
+            "Subjective (e.g., Reviews) or Objective (e.g., News).",
+            "Happy or Sad emotional states."
+        ],
+        answer: 2,
+        explanation: "The lecture defines Subjectivity/Objectivity scoring as 'allocating a given text into one of two categories: subjective (Reviews) or objective (e.g., News).' This is the most basic level of sentiment scoring and determines whether a text contains personal opinion at all.",
+        reference: "Page 18"
+    },
+    {
+        q: "Which Sentiment Scoring Type goes beyond positive/negative/neutral to detect specific emotions like happiness, frustration, anger, and sadness?",
+        options: [
+            "Polarity Classification.",
+            "Graded Sentiment Analysis.",
+            "Subjectivity/Objectivity Analysis.",
+            "Emotion Detection."
+        ],
+        answer: 3,
+        explanation: "Emotion Detection is described as the scoring type that 'allows you to go beyond polarity to detect emotions, like happiness, frustration, anger, and sadness.' This is more granular than Polarity Classification (positive/negative/neutral) and Graded Sentiment (levels of polarity).",
+        reference: "Page 18"
+    },
+    {
+        q: "A company wants to know not just whether customers are positive or negative about their phone, but specifically how strongly positive or negative they feel — distinguishing 'strong positive' from 'weak positive.' Which scoring type applies?",
+        options: [
+            "Polarity Classification.",
+            "Graded Sentiment Analysis.",
+            "Emotion Detection.",
+            "Subjectivity/Objectivity Analysis."
+        ],
+        answer: 1,
+        explanation: "Graded Sentiment Analysis is described as expanding polarity categories to 'include different levels of positive and negative (e.g. strong positive, weak positive, etc.).' It is used when 'polarity precision is important to your business' and more nuance is needed beyond simple positive/negative labels.",
+        reference: "Page 18"
+    },
+    {
+        q: "Sentiment Analysis, as a classification problem, operates at three different levels. What are they?",
+        options: [
+            "Word-level, Phrase-level, and Paragraph-level.",
+            "Micro-level, Meso-level, and Macro-level.",
+            "Document-level, Sentence-level, and Aspect-level.",
+            "Topic-level, Entity-level, and User-level."
+        ],
+        answer: 2,
+        explanation: "The lecture explicitly states: 'SA, as a classification problem, has three different levels: document-level, sentence-level, and aspect-level.' Each level analyzes sentiment at a different granularity — from the whole document down to specific features or aspects.",
+        reference: "Page 19"
+    },
+    {
+        q: "A customer review says: 'I bought a Canon G12 camera six months ago. I simply love it. The picture quality is amazing. The battery life is also long. However, my mother thinks it is too heavy for her.' If you analyze the sentiment of each individual sentence separately, which SA level are you applying?",
+        options: [
+            "Document-level, because the whole review is being considered.",
+            "Aspect-level, because specific camera features like battery and weight are mentioned.",
+            "Sentence-level, because sentiment is being classified for each sentence individually.",
+            "Subjectivity-level, because the review contains both subjective and objective statements."
+        ],
+        answer: 2,
+        explanation: "Sentence-level SA is about 'classifying sentiment expressed in each sentence.' Analyzing each sentence of the review individually (e.g., 'I simply love it' = positive; 'my mother thinks it is too heavy' = negative) applies sentence-level analysis, not document-level (whole review) or aspect-level (specific features).",
+        reference: "Page 19"
+    },
+    {
+        q: "Using the same camera review, if you analyze the sentiment specifically about the 'battery life' and 'weight' as distinct product features, which SA level is being applied?",
+        options: [
+            "Document-level, because you are analyzing the full review context.",
+            "Sentence-level, because each feature is mentioned in a single sentence.",
+            "Aspect-level, because you are characterizing opinion regarding particular aspects of the product.",
+            "Graded Sentiment Analysis, because you are distinguishing between different levels of positivity."
+        ],
+        answer: 2,
+        explanation: "Aspect-level SA 'plans to characterize the opinion regarding the particular aspects' of an entity. Analyzing sentiment about specific product attributes like 'battery life' (positive) and 'weight' (negative for the mother) is classic aspect-level analysis — the most granular of the three levels.",
+        reference: "Page 19"
+    },
+    {
+        q: "The lecture notes that social media sentiment analysis mostly focuses on which type of text?",
+        options: [
+            "Static text, because it is more comprehensive and detailed.",
+            "Dynamic text, because it captures real-time user-generated opinions.",
+            "Factual text, because it is more reliable for sentiment scoring.",
+            "Audiovisual text, because it is the fastest-growing content type on social media."
+        ],
+        answer: 1,
+        explanation: "The lecture explicitly states: 'Social media sentiment analysis mostly focuses on dynamic text.' This makes sense because dynamic text — tweets, comments, reviews, conversations — represents real-time, user-generated opinion expression, which is the primary target of sentiment analysis.",
+        reference: "Page 16"
+    }
+],
+lecture4: [
+    {
+        q: "What is Natural Language Processing (NLP) as defined in the lecture?",
+        options: [
+            "A database system for storing and retrieving large volumes of text data efficiently.",
+            "The ability of a machine to read, write, understand, and derive meaning from human language.",
+            "A statistical method for counting word frequencies in text documents.",
+            "A web scraping technique that extracts text from HTML pages automatically."
+        ],
+        answer: 1,
+        explanation: "The lecture defines NLP as 'the ability of a machine to read, write, understand and derive meaning from a human language.' An NLP system reads, processes, analyzes, and interprets text — with the goal of transferring the natural language ability of humans to machines.",
+        reference: "Page 3"
+    },
+    {
+        q: "What is the relationship between NLP and Sentiment Analysis as described in the lecture?",
+        options: [
+            "Sentiment Analysis is a prerequisite step that must occur before NLP can be applied.",
+            "NLP and Sentiment Analysis are completely independent techniques with no overlap.",
+            "Sentiment Analysis uses machine learning and NLP to identify whether a text is negative, positive, or neutral.",
+            "NLP replaces Sentiment Analysis by automatically generating sentiment reports without classification."
+        ],
+        answer: 2,
+        explanation: "The lecture explicitly states that 'Sentiment analysis uses machine learning and NLP to identify whether a text is negative, positive, or neutral.' NLP is the underlying technology that enables sentiment classification — they work together, not independently.",
+        reference: "Page 3"
+    },
+    {
+        q: "What is Tokenization in text preprocessing?",
+        options: [
+            "The process of identifying and removing common words that provide no meaning.",
+            "The process of transforming words back to their root form.",
+            "The process of breaking up text into small chunks called tokens.",
+            "The process of identifying parts of speech for words in a sentence."
+        ],
+        answer: 2,
+        explanation: "Tokenization is defined as breaking up text into small chunks called tokens. For example, the text 'Analyzing text is not that hard.' becomes the tokens: ['Analyzing', 'text', 'is', 'not', 'that', 'hard', '.'] — each word and punctuation mark becomes a separate token.",
+        reference: "Page 4"
+    },
+    {
+        q: "POS tagging in text preprocessing refers to:",
+        options: [
+            "Removing punctuation marks and special symbols from text.",
+            "Identifying the parts of speech (e.g., noun, verb, article) for different tokens.",
+            "Replacing slang and informal words with their formal equivalents.",
+            "Assigning polarity scores to individual words in a sentence."
+        ],
+        answer: 1,
+        explanation: "POS (Part-Of-Speech) tagging involves identifying the grammatical role of each token. The lecture uses the example: 'The dog killed the bat' → 'Definite article, noun, verb, definite article, noun.' This helps machines understand the grammatical structure of sentences.",
+        reference: "Page 4"
+    },
+    {
+        q: "Why is Stopword Removal performed during text preprocessing?",
+        options: [
+            "To reduce the file size of the text dataset for faster storage.",
+            "To remove common words that are not useful for sentiment analysis because they provide no meaning.",
+            "To eliminate all adjectives and adverbs that could bias sentiment scoring.",
+            "To remove words that appear too frequently and would dominate Association analysis."
+        ],
+        answer: 1,
+        explanation: "Stopword Removal 'takes out common words which are not useful for sentiment analysis. They provide no meaning.' Examples given are: a, and, or, the, etc. These high-frequency function words don't carry sentiment-relevant information and can be safely removed.",
+        reference: "Page 4"
+    },
+    {
+        q: "Lemmatization transforms the words 'going', 'gone', and 'went' into which lemma?",
+        options: [
+            "'goes' — the third-person singular present form.",
+            "'going' — the most common form of the word.",
+            "'go' — the root form of the word.",
+            "'gone' — the past participle form."
+        ],
+        answer: 2,
+        explanation: "The lecture provides the exact example: 'List of words: going, gone, went → Lemma: go.' Lemmatization transforms words back to their root (base) form, allowing the algorithm to treat different inflections of the same word as a single concept.",
+        reference: "Page 4"
+    },
+    {
+        q: "The tweet 'RT @fb It was gr8 match played yesterday, thnx to all my friends. http://bit.ly/2vcZa8w' is preprocessed into which result?",
+        options: [
+            "'it was great match played yesterday thanks to all my friends'",
+            "'great match play yesterday thank friend'",
+            "'RT match played yesterday friends'",
+            "'gr8 match yesterday thnx friends'"
+        ],
+        answer: 1,
+        explanation: "The lecture shows the preprocessed result as 'great match play yesterday thank friend.' This demonstrates multiple preprocessing steps applied simultaneously: RT (retweet marker) removed, @fb (mention) removed, URL removed, 'gr8' expanded to 'great', 'thnx' to 'thank', stop words ('it', 'was', 'to', 'all', 'my') removed, and lemmatization applied ('played'→'play', 'friends'→'friend').",
+        reference: "Page 5"
+    },
+    {
+        q: "According to the lecture, the order of text preprocessing stages in NLP systems:",
+        options: [
+            "Must always follow the fixed sequence: Tokenization → POS Tagging → Stopword Removal → Lemmatization.",
+            "Can vary depending on the application, though some or all stages are typically used.",
+            "Is strictly determined by the type of social media platform the data comes from.",
+            "Is irrelevant because each stage produces the same result regardless of order."
+        ],
+        answer: 1,
+        explanation: "The lecture explicitly notes: 'Some or all of these commonly used text preprocessing stages are used in typical NLP systems, although the order can vary depending on the application.' This means the pipeline is flexible and application-dependent, not rigid.",
+        reference: "Page 4"
+    },
+    {
+        q: "The three algorithms used in Sentiment Classification, as listed in the lecture, are:",
+        options: [
+            "Tokenization, POS Tagging, and Lemmatization.",
+            "Descriptive, Predictive, and Prescriptive analytics.",
+            "Lexicons/Rule-based, Automated Machine Learning, and Mixed/Hybrid.",
+            "TextBlob, VADER, and Naïve Bayes."
+        ],
+        answer: 2,
+        explanation: "The lecture lists exactly three sentiment classification algorithms: (1) Lexicons/Rule-based — relies on predefined word lists; (2) Automated Machine Learning — learns from past observations; (3) Mixed/Hybrid — combines both approaches for better accuracy.",
+        reference: "Page 6"
+    },
+    {
+        q: "How does a Lexicon/Rule-based sentiment classification system determine the sentiment of a text?",
+        options: [
+            "It trains a neural network on labeled examples and uses it to predict new text sentiment.",
+            "It counts the number of positive and negative words from a predefined lexicon and assigns sentiment based on which type dominates.",
+            "It uses the Bayes Theorem to calculate the probability of each sentiment class.",
+            "It plots text data as points in multi-dimensional space and uses a hyperplane to separate classes."
+        ],
+        answer: 1,
+        explanation: "The lecture explains that rule-based systems rely on a lexicon of positive and negative terms. 'When fed a piece of text, the model counts the number of positive and negative words that appear, and assigns the corresponding sentiment. If a phrase contains more positive than negative words, it's tagged as Positive.'",
+        reference: "Page 7"
+    },
+    {
+        q: "Which of the following are listed as examples of Lexicon/Rule-based sentiment tools in the lecture?",
+        options: [
+            "Naïve Bayes, SVM, and Deep Learning.",
+            "TextBlob, SentiWordNet, and VADER.",
+            "Python, R, and MATLAB.",
+            "Google Analytics, Hootsuite, and Sprout Social."
+        ],
+        answer: 1,
+        explanation: "The lecture explicitly lists TextBlob, SentiWordNet, and VADER as examples of Lexicon/Rule-based sentiment classification tools. These are rule-based systems that use predefined dictionaries of sentiment-bearing words.",
+        reference: "Page 7"
+    },
+    {
+        q: "What determines the success of an Automated Machine Learning sentiment classification approach?",
+        options: [
+            "The size of the lexicon used and the number of predefined sentiment rules.",
+            "The speed of the computer processing the data and the amount of RAM available.",
+            "The quality of the training dataset and the algorithm chosen.",
+            "The number of social media platforms from which data is collected."
+        ],
+        answer: 2,
+        explanation: "The lecture states that with automated ML systems, 'The success of this approach depends on the quality of the training data set and the algorithm.' Unlike rule-based systems, ML systems learn patterns from labeled data, so data quality and algorithm choice are critical.",
+        reference: "Page 8"
+    },
+    {
+        q: "What is the key advantage of a Hybrid/Mixed sentiment classification system over using either rule-based or machine learning approaches alone?",
+        options: [
+            "Hybrid systems are faster than both rule-based and ML approaches because they run in parallel.",
+            "Hybrid systems combine both approaches to obtain the best possible outcome, overcoming the limitations of each individual approach.",
+            "Hybrid systems require less training data because the lexicon compensates for data scarcity.",
+            "Hybrid systems eliminate the need for preprocessing since they handle raw text directly."
+        ],
+        answer: 1,
+        explanation: "The lecture describes Hybrid systems as combining 'both rule-based and machine learning-based approaches.' The model first learns from tagged examples (ML), then compares results with a lexicon (rule-based) to improve accuracy. 'The goal is to obtain the best possible outcome, with none of the limitations of each individual approach.'",
+        reference: "Page 9"
+    },
+    {
+        q: "TextBlob produces two scores for a given sentence. What do these two scores measure?",
+        options: [
+            "A positivity score [0 to 1] and a negativity score [0 to 1].",
+            "A polarity score [-1 to 1] measuring sentiment direction, and a subjectivity score [0 to 1] measuring the amount of personal opinion.",
+            "A compound score [-1 to 1] and three probability scores for positive, negative, and neutral.",
+            "A sentiment score [0 to 100] and a confidence score [0 to 1]."
+        ],
+        answer: 1,
+        explanation: "The lecture specifies that TextBlob outputs: (1) Polarity score ranging from -1 to 1, where -1 identifies the most negative words; and (2) Subjectivity score ranging from 0 to 1, where 0 indicates factual information (objective) and higher values indicate more personal opinion.",
+        reference: "Page 10"
+    },
+    {
+        q: "For the sentence 'GrabNGoInfo.com is a great machine learning tutorial website,' TextBlob produces a polarity score of 0.8 and a subjectivity score of 0.75. How does TextBlob interpret this?",
+        options: [
+            "The sentence has a negative sentiment because the score is below 1.0.",
+            "The sentence is factual and objective because the subjectivity score is below 1.",
+            "The sentence has a subjective positive sentiment — high polarity means positive, high subjectivity means opinion-based.",
+            "The sentence is neutral because neither score reaches the maximum value of 1."
+        ],
+        answer: 2,
+        explanation: "The lecture states TextBlob interprets this sentence as having 'a subjective positive sentiment.' A polarity of 0.8 (closer to 1 = very positive) confirms positive sentiment, while a subjectivity score of 0.75 (closer to 1 = highly subjective) confirms it's expressing personal opinion rather than objective fact.",
+        reference: "Page 11"
+    },
+    {
+        q: "VADER differs from TextBlob in its output format. What are VADER's four output keys?",
+        options: [
+            "Sentiment, Confidence, Relevance, and Tone.",
+            "Positive, Negative, Neutral, and Overall.",
+            "A Compound score (Comp) and three Probability Scores: negative (neg), neutral (neu), and positive (pos).",
+            "Polarity, Subjectivity, Objectivity, and Emotion."
+        ],
+        answer: 2,
+        explanation: "The lecture describes VADER as outputting 4 keys: (1) Compound (Comp) — a lexicon polarity score from -1 to 1; and three probability scores showing how positive, negative, and neutral the input is. The compound score is calculated by normalizing the other three scores.",
+        reference: "Page 10"
+    },
+    {
+        q: "For the sentence 'GrabNGoInfo.com is a great machine learning tutorial website,' VADER outputs: Compound: 0.6249, neg: 0.0, neu: 0.631, pos: 0.369. What does this mean?",
+        options: [
+            "The sentence is 63.1% positive and 36.9% neutral with no negative words.",
+            "The sentence has no negative words, is 63.1% neutral and 36.9% positive, with an overall positive compound score.",
+            "The sentence is mostly negative because the neutral score dominates the positive score.",
+            "The compound score of 0.6249 means the sentence is 62.49% positive."
+        ],
+        answer: 1,
+        explanation: "The lecture states VADER interprets this as: 'no negative words, 63.1% neutral and 36.9% positive words.' The compound score of 0.6249 confirms overall positive sentiment. The neutral percentage being higher doesn't mean it's neutral — it means many words in the sentence are sentiment-neutral (e.g., 'is', 'a', 'machine', 'learning').",
+        reference: "Page 11"
+    },
+    {
+        q: "The VADER Compound score is described as 'indispensable.' How is it calculated?",
+        options: [
+            "It is the simple average of the positive, negative, and neutral scores.",
+            "It is calculated by multiplying the positive score by the negative score.",
+            "It is calculated by normalizing the other three scores (neg, neu, pos) between -1 and +1.",
+            "It is derived from the TextBlob polarity score adjusted for social media context."
+        ],
+        answer: 2,
+        explanation: "The lecture explicitly states: 'The Compound score is an indispensable score that is calculated by normalizing the other 3 scores (neg, neu, pos) between -1 and +1.' This normalization makes it a reliable single metric for overall sentiment — not a simple average.",
+        reference: "Page 10"
+    },
+    {
+        q: "Support Vector Machines (SVM) in sentiment classification work by:",
+        options: [
+            "Counting positive and negative words from a predefined lexicon dictionary.",
+            "Applying Bayes' Theorem to calculate the probability of each sentiment class.",
+            "Plotting labeled data as points in multi-dimensional space and finding a hyperplane (decision boundary) that divides the data points.",
+            "Stacking multiple layers of neural networks that imitate human brain associations."
+        ],
+        answer: 2,
+        explanation: "The lecture describes SVM as 'a model that plots labelled data as points in a multi-dimensional space. The hyperplane or decision boundary is a line which divides the data points.' SVM is a machine learning approach that separates classes geometrically rather than probabilistically.",
+        reference: "Page 12"
+    },
+    {
+        q: "What significant advantage does Deep Learning have over traditional Machine Learning classification algorithms like SVM?",
+        options: [
+            "Deep Learning is faster to train because it requires less data than traditional ML algorithms.",
+            "Deep Learning uses predefined rules, making it more transparent and easier to interpret.",
+            "In Deep Learning, the neural network can learn to correct itself when it makes an error; with traditional ML, errors need to be fixed via human intervention.",
+            "Deep Learning eliminates the need for preprocessing because it handles raw text directly."
+        ],
+        answer: 2,
+        explanation: "The lecture explicitly states: 'Deep learning has significant advantages over traditional classification algorithms. In deep learning the neural network can learn to correct itself when it makes an error. With traditional machine learning errors need to be fixed via human intervention.' This self-correction through backpropagation is the key differentiator.",
+        reference: "Page 12-13"
+    },
+    {
+        q: "What makes the Naïve Bayes classifier 'naïve'?",
+        options: [
+            "It is naïve because it only handles simple binary classification (positive/negative) and cannot detect neutral sentiment.",
+            "It makes an unrealistic assumption that the presence of a particular feature in a class is unrelated to the presence of any other feature (feature independence).",
+            "It is naïve because it relies entirely on a predefined lexicon without any learning from training data.",
+            "It assumes all words in a sentence contribute equally to the final sentiment classification."
+        ],
+        answer: 1,
+        explanation: "The lecture states: 'It's naïve because it makes an unrealistic assumption that the presence of a particular feature in a class is unrelated to the presence of any other feature (feature independence).' Words in real language are clearly related to each other, making this assumption unrealistic — yet despite this simplicity, Naïve Bayes can outperform even highly sophisticated methods.",
+        reference: "Page 14"
+    },
+    {
+        q: "In Naïve Bayes sentiment analysis, what are the two types of probabilities that need to be calculated?",
+        options: [
+            "The compound score and the probability score for each sentiment class.",
+            "The prior probabilities of a sentence being positive/negative, and the probability of each word appearing in a positive/negative sentence.",
+            "The polarity score and the subjectivity score for the entire document.",
+            "The frequency of each word in the corpus and the TF-IDF weight of each word."
+        ],
+        answer: 1,
+        explanation: "The lecture specifies two calculations needed for Naïve Bayes: (1) Prior Probabilities — P(Positive) and P(Negative) based on training data; and (2) Conditional word probabilities — P(word|Positive) and P(word|Negative) for each word. These are then combined using Bayes' Rule.",
+        reference: "Page 15"
+    },
+    {
+        q: "Using the Naïve Bayes example from the lecture for the sentence 'The movie was amazing,' given P(Positive)=0.6 and P(Negative)=0.4, P('movie'|Positive)=0.1, P('amazing'|Positive)=0.25, P('movie'|Negative)=0.15, P('amazing'|Negative)=0.01, which calculation correctly determines the classification?",
+        options: [
+            "P(Positive|sentence) = 0.6+0.25 = 0.85 > P(Negative|sentence) = 0.4+0.01 = 0.41, so it is Positive.",
+            "P(sentence|Positive) = 0.1×0.25×0.6 = 0.015 > P(sentence|Negative) = 0.15×0.01×0.4 = 0.0006, so it is Positive.",
+            "P(sentence|Negative) = 0.15×0.25×0.4 = 0.015 > P(sentence|Positive) = 0.1×0.01×0.6 = 0.0006, so it is Negative.",
+            "P(Positive) = 0.6 > P(Negative) = 0.4, so the sentence is automatically Positive regardless of word probabilities."
+        ],
+        answer: 1,
+        explanation: "The lecture shows: P(sentence|Positive) = 0.1×0.25×0.6 = 0.015 and P(sentence|Negative) = 0.15×0.01×0.4 = 0.0006. Since P(sentence|Positive) > P(sentence|Negative), the classifier predicts 'Positive.' You multiply the prior probability with all conditional word probabilities — this is how Naïve Bayes applies the chain of probabilities.",
+        reference: "Page 16"
+    },
+    {
+        q: "Bayes' Theorem is described in the lecture as:",
+        options: [
+            "An algorithm that plots data points in multi-dimensional space to find decision boundaries.",
+            "A fundamental theorem in probability theory that describes how to update the probabilities of hypotheses when given evidence.",
+            "A rule for calculating TF-IDF weights to rank word importance in a document.",
+            "A method for normalizing sentiment scores between -1 and +1."
+        ],
+        answer: 1,
+        explanation: "The lecture defines Bayes' Theorem as 'a fundamental theorem in probability theory that describes how to update the probabilities of hypotheses when given evidence.' In sentiment analysis, it updates the probability of a sentiment class (hypothesis) given the presence of specific words (evidence).",
+        reference: "Page 14"
+    },
+    {
+        q: "If P(Positive|word) > P(Negative|word) according to the Naïve Bayes decision rule in the lecture, the sentence is classified as:",
+        options: [
+            "Neutral, because neither probability is dominant enough.",
+            "Negative, because positive probability being higher indicates overcorrection.",
+            "Positive, because the posterior probability of being positive given the word exceeds that of being negative.",
+            "Subjective, because the word creates opinion-based classification."
+        ],
+        answer: 2,
+        explanation: "The lecture states: 'If P(Positive|word) > P(Negative|word), then the sentence is classified as positive. Conversely, if P(Negative|word) > P(Positive|word), it would be classified as negative.' This is the core decision rule of Naïve Bayes classification.",
+        reference: "Page 15"
+    },
+    {
+        q: "The four types of Sentiment Analysis Data Visualization listed in the lecture are:",
+        options: [
+            "Bar Charts, Pie Charts, Line Graphs, and Heat Maps.",
+            "Overall Sentiment, Sentiment over Time, Sentiment by Rating, and Sentiment by Topic.",
+            "Word Clouds, Network Graphs, Scatter Plots, and Histograms.",
+            "Positive Trends, Negative Trends, Neutral Trends, and Mixed Trends."
+        ],
+        answer: 1,
+        explanation: "The lecture lists exactly four famous sentiment analysis data visualizations: (1) Overall Sentiment, (2) Sentiment over Time, (3) Sentiment by Rating, and (4) Sentiment by Topic. Each visualization serves a different analytical purpose and level of granularity.",
+        reference: "Page 17"
+    },
+    {
+        q: "The 'Sentiment over Time' visualization is described as expanding on which other visualization type?",
+        options: [
+            "Sentiment by Topic.",
+            "Sentiment by Rating.",
+            "Overall Sentiment.",
+            "Word Cloud visualization."
+        ],
+        answer: 2,
+        explanation: "The lecture explicitly states that 'Sentiment Over Time expands on the Overall Sentiment data.' While Overall Sentiment gives a static snapshot of positive/negative/neutral distribution, Sentiment over Time adds the temporal dimension — showing how that distribution changes across a period (e.g., 2016–2021).",
+        reference: "Page 19"
+    },
+    {
+        q: "What does the 'Sentiment by Rating' visualization accomplish, according to the lecture?",
+        options: [
+            "It maps sentiment to specific geographic locations where reviews were written.",
+            "It categorizes texts from scores 1 (Bad) to 5 (Excellent) and breaks down the texts from those scores into a graphic.",
+            "It shows how overall sentiment changes across different time periods.",
+            "It pairs sentiment with product-specific features using aspect-based analysis."
+        ],
+        answer: 1,
+        explanation: "The lecture describes Sentiment by Rating as: 'Category from 1-Bad to 5-Excellent, and breaking down the texts from the scores you can derive the above graphic.' This combines numerical star ratings with the actual textual sentiment, allowing analysis of whether written reviews align with star ratings.",
+        reference: "Page 20"
+    },
+    {
+        q: "The 'Sentiment by Topic' visualization is linked to which specific SA level discussed in Lecture 3?",
+        options: [
+            "Document-level SA, because it analyzes sentiment across entire documents.",
+            "Sentence-level SA, because it breaks down sentiment sentence by sentence.",
+            "Aspect-level SA, because it pairs given sentiment to product/service specific features.",
+            "Subjectivity-level SA, because it separates objective from subjective content."
+        ],
+        answer: 2,
+        explanation: "The lecture states: 'Sentiment by Topic begins to illustrate how sentiment analysis can take us even further into our data. The above chart pairs given sentiment to product/service specific features, this is known as aspect-based sentiment analysis.' This directly links to the aspect-level SA scope from Lecture 3.",
+        reference: "Page 21"
+    },
+    {
+        q: "Machine Learning classification systems for sentiment analysis are described as being 'trained using pre-labelled training data.' What does this mean?",
+        options: [
+            "The system receives raw unlabeled text and automatically discovers sentiment categories without human guidance.",
+            "The system learns to predict sentiment from examples where the correct sentiment class has already been assigned by humans.",
+            "The system uses a predefined dictionary of words to label text without any training process.",
+            "The system generates its own training labels by applying lexicon-based rules first."
+        ],
+        answer: 1,
+        explanation: "The lecture notes that automated ML classification is trained using 'pre-labelled training data' — meaning human annotators have already assigned the correct sentiment labels to training examples. The ML algorithm then learns the patterns that distinguish positive from negative text based on these labeled examples.",
+        reference: "Page 12"
+    },
+    {
+        q: "A developer builds a sentiment classifier that first trains on a dataset of labeled tweets, then cross-checks its predictions against VADER's lexicon to correct borderline cases. Which classification approach does this represent?",
+        options: [
+            "Lexicon/Rule-based classification, because VADER is a lexicon tool.",
+            "Automated Machine Learning classification, because training data is used.",
+            "Mixed/Hybrid classification, because it combines machine learning training with a lexicon for improved accuracy.",
+            "Deep Learning classification, because it involves multiple processing layers."
+        ],
+        answer: 2,
+        explanation: "This is a classic Hybrid/Mixed approach. The lecture describes Hybrid systems as: first learning from tagged examples (ML step), then comparing results with a lexicon (rule-based step) to improve accuracy. Using both training data and VADER's lexicon in the same pipeline is exactly what the Mixed/Hybrid approach does.",
+        reference: "Page 9"
+    },
+    {
+        q: "A TextBlob subjectivity score of 0.0 for a given text indicates:",
+        options: [
+            "The text is extremely negative in sentiment.",
+            "The text contains factual, objective information with no personal opinion.",
+            "The text could not be analyzed due to insufficient data.",
+            "The text is completely neutral — neither positive nor negative."
+        ],
+        answer: 1,
+        explanation: "The lecture states that the TextBlob subjectivity score ranges from 0 to 1, where '0 → factual information.' A score of 0 means the text is fully objective — expressing facts rather than opinions. This is distinct from the polarity score which measures positive/negative sentiment direction.",
+        reference: "Page 10"
+    },
+    {
+        q: "Deep Learning is described in the lecture as performing multiple layers of processing through an artificial neural network. What is the key learning mechanism that distinguishes it from traditional ML?",
+        options: [
+            "Deep Learning uses lexicons to supplement its learning, while traditional ML relies purely on data.",
+            "Deep Learning applies Bayes' Theorem at each layer, while traditional ML applies it once.",
+            "Deep Learning imitates human brain learning through associations and abstractions, and can self-correct errors without human intervention.",
+            "Deep Learning processes only structured data, while traditional ML handles unstructured text."
+        ],
+        answer: 2,
+        explanation: "The lecture describes Deep Learning as 'a diverse set of algorithms that imitate human brain learning through associations and abstractions.' The critical advantage highlighted is self-correction: 'the neural network can learn to correct itself when it makes an error,' unlike traditional ML where errors require human intervention to fix.",
+        reference: "Page 12"
+    },
+    {
+        q: "Which preprocessing step would be MOST responsible for converting 'thnx' to 'thanks' and 'gr8' to 'great' in the tweet example from the lecture?",
+        options: [
+            "Tokenization — because it breaks words into chunks that can then be expanded.",
+            "Lemmatization — because it transforms words to their root form.",
+            "Stopword Removal — because slang words provide no standard meaning.",
+            "Preprocessing of slangs and abbreviations — replacing informal terms with their standard equivalents."
+        ],
+        answer: 3,
+        explanation: "From Lecture 3's preprocessing description and this lecture's example, slang expansion (converting 'thnx'→'thank', 'gr8'→'great') falls under the preprocessing stage where 'slangs, emoticons are replaced.' This is distinct from Lemmatization (which handles grammatical root forms like 'friends'→'friend') and Stopword Removal (which deletes function words entirely).",
+        reference: "Page 5"
+    }
+],
+lecture5:[
+    {
+        "q": "According to the lecture, what is the primary driver behind the claim that networks are crucial for business insights in social media?",
+        "options": [
+            "The high cost of building social media platforms.",
+            "The ability to directly control consumer purchasing habits.",
+            "The established influence of online reviews on consumer purchase decisions.",
+            "The legal requirement for businesses to monitor social networks."
+        ],
+        "answer": 2,
+        "explanation": "The lecture states, 'Studies established that 93% of consumers' purchase decisions are influenced by online reviews.' This statistic highlights the direct link between social network activity (reviews) and business outcomes (purchases), making network analytics valuable.",
+        "reference": "Page 3"
+    },
+    {
+        "q": "A researcher wants to identify the single most influential person to spread a new idea as quickly as possible to the entire network. Which type of centrality measure would be most directly suited for this task?",
+        "options": [
+            "Degree Centrality",
+            "Closeness Centrality",
+            "Betweenness Centrality",
+            "Eigenvector Centrality"
+        ],
+        "answer": 1,
+        "explanation": "Closeness centrality measures how quickly a node can reach all other nodes in the network. A node with high closeness can spread information to everyone in the fewest steps, making it ideal for rapid broadcast. While degree shows immediate connections, closeness shows overall propagation speed.",
+        "reference": "Page 4"
+    },
+    {
+        "q": "In the context of network analytics, what is the fundamental difference between a 'node' and a 'link'?",
+        "options": [
+            "Nodes are individuals, while links are always friendships.",
+            "Nodes represent entities, and links represent the relationships between those entities.",
+            "Nodes are mathematical constructs, while links are physical connections.",
+            "Nodes are the data, and links are the analysis methods."
+        ],
+        "answer": 1,
+        "explanation": "The lecture defines nodes as representing entities like individuals, organizations, or computers, while links represent the relationships among them, such as friendship, trade, or hyperlinks. This is the foundational building block of network representation.",
+        "reference": "Page 6"
+    },
+    {
+        "q": "Based on the classification of networks, if a network is built based on a user manually creating a 'friends list,' it would be considered:",
+        "options": [
+            "An implicit network",
+            "An explicit network",
+            "A directed network",
+            "A two-mode network"
+        ],
+        "answer": 1,
+        "explanation": "The lecture classifies networks based on existence as implicit or explicit. Explicit networks are those that are deliberately constructed by users (like creating a friends list or joining a group), whereas implicit networks are derived from user actions (like co-occurrence in a photo).",
+        "reference": "Page 10"
+    },
+    {
+        "q": "What is the primary purpose of using 'formal' methods like matrices and graphs to represent social network data?",
+        "options": [
+            "To make the data look more complex and scientific.",
+            "To allow for compact, systematic, and rule-based analysis that can reveal hidden patterns.",
+            "To replace the need for qualitative descriptions of the network.",
+            "To ensure the data is stored in a database."
+        ],
+        "answer": 1,
+        "explanation": "The lecture outlines three reasons for using formal methods: they are compact and systematic; they force completeness; and their rules and conventions can help researchers see things in the data they might have missed with words alone. This enables a deeper analytical understanding.",
+        "reference": "Page 15, 17"
+    },
+    {
+        "q": "A graph G is defined by which two fundamental sets?",
+        "options": [
+            "A set of links and a set of weights",
+            "A set of nodes (V) and a set of edges (E)",
+            "A set of adjacency matrices and a set of centrality scores",
+            "A set of vertices and a set of directions"
+        ],
+        "answer": 1,
+        "explanation": "The lecture clearly states that 'a graph G will be defined as' having a set of nodes (vertices) and a set of edges (links). This is the foundational mathematical definition.",
+        "reference": "Page 21"
+    },
+    {
+        "q": "For an undirected graph, the adjacency matrix is always:",
+        "options": [
+            "Asymmetric",
+            "Symmetric",
+            "A diagonal matrix",
+            "A vector"
+        ],
+        "answer": 1,
+        "explanation": "The lecture mentions that 'as you see in the example the adjacency matrix is symmetric for the undirected graph.' This is because if node A is connected to node B, the connection from B to A is the same edge, making the matrix mirror across its diagonal.",
+        "reference": "Page 22"
+    },
+    {
+        "q": "What is the key limitation of Degree Centrality as a measure of influence?",
+        "options": [
+            "It is too computationally expensive to calculate.",
+            "It only works for directed networks.",
+            "It is a local measure and does not consider the connectivity of a node's neighbors.",
+            "It cannot be used to identify influential nodes."
+        ],
+        "answer": 2,
+        "explanation": "The lecture explains that node degree is a 'local measure' because it doesn't consider the quality or connectivity of the neighbors. A node with many connections to low-degree nodes might be less influential than a node with fewer connections to very high-degree nodes.",
+        "reference": "Page 28"
+    },
+    {
+        "q": "A social media network is represented as a graph where a link from User A to User B means 'A follows B.' This is best classified as:",
+        "options": [
+            "An undirected, one-mode network",
+            "A directed, one-mode network",
+            "An undirected, two-mode network",
+            "A directed, two-mode network"
+        ],
+        "answer": 1,
+        "explanation": "The link has a direction (A follows B, but B may not follow A), so it's a directed network. The nodes are all the same type (users), so it's a one-mode network. This combination makes it a directed, one-mode network.",
+        "reference": "Page 10"
+    },
+    {
+        "q": "If a researcher is studying a network of 'co-authorship' where nodes are authors, and links exist only if they have written a paper together, this is likely an example of a(n):",
+        "options": [
+            "Explicit, directed network",
+            "Implicit, undirected network",
+            "Explicit, weighted network",
+            "Implicit, directed network"
+        ],
+        "answer": 1,
+        "explanation": "The network is 'implicit' because it is derived from an action (co-authoring a paper) rather than a user-declared relationship. Co-authorship is usually undirected (if A wrote with B, B wrote with A).",
+        "reference": "Page 10"
+    },
+    {
+        "q": "What does the Eigenvector Centrality of a node essentially represent?",
+        "options": [
+            "The total number of neighbors a node has.",
+            "The shortest path from the node to all others.",
+            "The sum of the degrees of its neighboring nodes, reflecting the 'importance' of its connections.",
+            "The number of times a node lies on the shortest path between two other nodes."
+        ],
+        "answer": 2,
+        "explanation": "The lecture uses the example where a node's EVC score is 'nothing but the sum of degrees of its neighboring nodes.' This demonstrates that a node is central not just because it has many connections, but because its connections are to other important (high-degree) nodes.",
+        "reference": "Page 34"
+    },
+    {
+        "q": "In a directed graph representing a Twitter follower network, what does 'In-degree' measure?",
+        "options": [
+            "The number of users a given user follows.",
+            "The number of followers a given user has.",
+            "The total number of interactions a user has.",
+            "The number of mutual connections a user has."
+        ],
+        "answer": 1,
+        "explanation": "The lecture defines 'In-degree' as the number of edges/connections incident on a node. In a follower network, an edge from A to B means A follows B. The edges 'incident on' B are the followers of B, so in-degree represents follower count.",
+        "reference": "Page 27"
+    },
+    {
+        "q": "Which of the following scenarios would be best represented by a 'two-mode network'?",
+        "options": [
+            "A network of employees in a company showing who talks to whom.",
+            "A network of countries showing trade relationships.",
+            "A network connecting users to the groups they have joined on a social media site.",
+            "A network of hyperlinks between different websites."
+        ],
+        "answer": 2,
+        "explanation": "A two-mode network involves two different types of nodes. Here, the node types are 'users' and 'groups'. The links represent membership. The lecture lists 'two-mode networks' as a classification based on the composition of nodes, which is distinct from one-mode networks (all nodes are the same type).",
+        "reference": "Page 10"
+    },
+    {
+        "q": "According to the lecture, why is visual inspection alone insufficient for studying complex networks like Facebook's social graph?",
+        "options": [
+            "Because visualizations are not allowed for proprietary data.",
+            "Because it is hard to study a complex structure just by observing it visually, requiring mathematical tools.",
+            "Because visualizations only work for directed networks.",
+            "Because network graphs are not meant to be seen by humans."
+        ],
+        "answer": 1,
+        "explanation": "The lecture states that a complex graph 'will be hard to study it just by observing it visually, so for that, we need to build mathematical tools that will help us understand or analyze our graph structure.'",
+        "reference": "Page 21"
+    },
+    {
+        "q": "A researcher is looking at a graph with 5 nodes. The adjacency matrix for this graph would have dimensions of:",
+        "options": [
+            "5 x 5",
+            "10 x 10",
+            "5 x 1",
+            "1 x 5"
+        ],
+        "answer": 0,
+        "explanation": "The adjacency matrix is defined as a 2D array of size n x n, where n is the number of nodes. With 5 nodes, the matrix would be 5 rows by 5 columns, or 5x5.",
+        "reference": "Page 22"
+    },
+    {
+        "q": "In the context of network analytics, what is the primary purpose of 'Centrality Measures'?",
+        "options": [
+            "To determine the total number of links in a network.",
+            "To identify the most important or central nodes in a network.",
+            "To calculate the density of a network.",
+            "To visualize the network in a 3D space."
+        ],
+        "answer": 1,
+        "explanation": "The lecture introduces centrality measures as the 'primary assessment for detecting influential nodes' and states they address the question: 'Who is the most important or central person in this network?'",
+        "reference": "Page 23"
+    },
+    {
+        "q": "If a user has a high 'Betweenness Centrality' in a social network, what does that imply about their role?",
+        "options": [
+            "They are a direct connector to the most people.",
+            "They are a gatekeeper or bridge between different groups in the network.",
+            "They have the fastest path to all other nodes.",
+            "They are connected to the most important people."
+        ],
+        "answer": 1,
+        "explanation": "Although not defined in depth, the mention of 'betweenness centrality' on page 4 alongside other measures suggests it captures a different aspect of importance. Betweenness typically measures how often a node lies on the shortest path between other nodes, making it a key bridge or gatekeeper.",
+        "reference": "Page 4"
+    },
+    {
+        "q": "What is the key difference between a 'weighted' and an 'unweighted' network?",
+        "options": [
+            "Weighted networks are always directed, while unweighted are always undirected.",
+            "Weighted networks have a value assigned to the links (e.g., strength of relationship), while unweighted networks only indicate presence or absence.",
+            "Weighted networks have more nodes than unweighted networks.",
+            "Weighted networks are used only for social media, while unweighted are used for computer networks."
+        ],
+        "answer": 1,
+        "explanation": "Page 10 classifies networks 'Based on the weight assigned to the links.' A weighted network assigns a value to a link (e.g., number of interactions, strength of tie), whereas an unweighted network treats a link as simply present or absent.",
+        "reference": "Page 10"
+    },
+    {
+        "q": "The lecture states that the rules and conventions of graphs and mathematics can help us do what?",
+        "options": [
+            "Simplify the network so it has no links.",
+            "See things in our data that we might not have looked for using words alone.",
+            "Automatically interpret the meaning of every node.",
+            "Convert all networks into undirected graphs."
+        ],
+        "answer": 1,
+        "explanation": "One of the three reasons for using formal methods is that 'the rules and conventions of the language of graphs and mathematics themselves lead us to see things in our data that might not have occurred to us to look for if we had described our data only with words.'",
+        "reference": "Page 17"
+    },
+    {
+        "q": "If a researcher is interested in the 'overall structure' of a network to see how it differs from another, which of the following would be LEAST relevant to analyze?",
+        "options": [
+            "Network density",
+            "Network diameter",
+            "The degree of a single node",
+            "Number of nodes and links"
+        ],
+        "answer": 2,
+        "explanation": "Page 4 lists network-level metrics for understanding overall structure: number of nodes and links, density, diameter, and weight. The degree of a single node is a node-level metric, not a global structural property of the network.",
+        "reference": "Page 4"
+    },
+    {
+        "q": "In the lecture's example on page 34, why does Node A have a higher Eigenvector Centrality score than Node E?",
+        "options": [
+            "Because Node A has more direct neighbors than Node E.",
+            "Because Node A is connected to nodes with high degrees, whereas Node E is connected to a node with a low degree.",
+            "Because Node A is a bridge between two clusters.",
+            "Because Node A is located in the center of the graph."
+        ],
+        "answer": 1,
+        "explanation": "The example calculates EVC for node A as degree(B)+degree(C)+degree(D) = 8, while node E has a score of 3 because it is only connected to a single node of degree 3. The score depends on the degrees of its neighbors.",
+        "reference": "Page 34"
+    },
+    {
+        "q": "A network where all edges represent a relationship that is mutual by definition (e.g., 'being married to') is best represented as:",
+        "options": [
+            "A directed network",
+            "A one-mode network",
+            "An undirected network",
+            "A weighted network"
+        ],
+        "answer": 2,
+        "explanation": "A mutual relationship implies no direction. The link 'being married to' inherently goes both ways. This aligns with the lecture's definition of an 'undirected network' based on the direction of links.",
+        "reference": "Page 10"
+    },
+    {
+        "q": "What is the fundamental purpose of 'network analytics' as described in the lecture?",
+        "options": [
+            "To increase the number of users on a social media platform.",
+            "To construct, analyze, and understand social media networks to identify influential nodes or understand overall structure.",
+            "To design new social media algorithms.",
+            "To replace traditional marketing methods."
+        ],
+        "answer": 1,
+        "explanation": "The lecture states that 'Social media network analytics thus deals with constructing, analyzing, and understanding social media networks' and lists specific purposes like identifying influential nodes or understanding the overall structure.",
+        "reference": "Page 3"
+    },
+    {
+        "q": "In the classification of networks based on 'mode,' a network that includes nodes representing 'customers' and nodes representing 'products' that they have purchased would be a:",
+        "options": [
+            "One-mode network",
+            "Two-mode network",
+            "Multimode network",
+            "Implicit network"
+        ],
+        "answer": 1,
+        "explanation": "The classification on page 10 defines a 'two-mode network' as one based on the composition of nodes. Having two distinct types of nodes (customers and products) is the defining characteristic of a two-mode network.",
+        "reference": "Page 10"
+    },
+    {
+        "q": "According to the content, why are people in central positions of social media networks of great value to social marketers?",
+        "options": [
+            "They are the easiest to contact.",
+            "They are the most likely to purchase products.",
+            "They can propagate information to vast numbers of people and are considered opinion leaders.",
+            "They control the network's technical infrastructure."
+        ],
+        "answer": 2,
+        "explanation": "Page 4 explicitly states that such people are valuable because they can 'propagate information to vast numbers of people and are considered opinion leaders.'",
+        "reference": "Page 4"
+    },
+    {
+        "q": "If a graph has a 'diameter' of 5, what does this indicate about the network?",
+        "options": [
+            "There are 5 nodes in the network.",
+            "The average distance between nodes is 5.",
+            "The longest shortest path between any two nodes is 5.",
+            "The density of the network is 5."
+        ],
+        "answer": 2,
+        "explanation": "While not explicitly defined in the text, 'diameter' is listed on page 4 as a network-level metric. In graph theory, the diameter is the longest of all the shortest paths between any two nodes, indicating the maximum distance between nodes in the network.",
+        "reference": "Page 4"
+    },
+    {
+        "q": "A social network where users can 'follow' or 'unfollow' each other at will, and the 'follow' relationship is not automatically reciprocated, is a perfect example of a(n):",
+        "options": [
+            "Undirected network",
+            "Weighted network",
+            "Directed network",
+            "Explicit network"
+        ],
+        "answer": 2,
+        "explanation": "The core characteristic here is the directionality of the relationship. Since a follow from A to B does not imply a follow from B to A, the network is directed, aligning with the 'direction of links' classification.",
+        "reference": "Page 10"
+    },
+    {
+        "q": "What is the main advantage of using matrices to represent a network, according to the lecture?",
+        "options": [
+            "They are the only format that computers can understand.",
+            "They are compact and systematic, forcing a complete description of patterns.",
+            "They are easier to draw than graphs.",
+            "They can only represent undirected networks."
+        ],
+        "answer": 1,
+        "explanation": "Page 15 states that matrices and graphs are 'compact and systematic' and 'force us to be systematic and complete in describing patterns of social relations.'",
+        "reference": "Page 15"
+    },
+    {
+        "q": "The lecture mentions that network analytics can be used to 'find important links and their rankings weight.' What does the 'weight' of a link likely represent?",
+        "options": [
+            "The physical distance between nodes.",
+            "The strength, frequency, or value of the relationship.",
+            "The color of the link in a visualization.",
+            "The direction of the link."
+        ],
+        "answer": 1,
+        "explanation": "Page 4 mentions 'weight' as a property of links that can be analyzed. Page 10 defines 'weighted networks,' where a weight is assigned to links, implying it captures some quantitative aspect of the relationship (e.g., number of interactions).",
+        "reference": "Page 4, 10"
+    },
+    {
+        "q": "In the context of network representation, what is the relationship between 'graph theory' and 'centrality measures'?",
+        "options": [
+            "Graph theory is used to represent the network, and centrality measures are a way to analyze the importance of nodes within that representation.",
+            "Centrality measures are used to build graphs, and graph theory is used to visualize them.",
+            "They are two unrelated concepts.",
+            "Graph theory replaces the need for centrality measures."
+        ],
+        "answer": 0,
+        "explanation": "Page 23 connects these: 'Using the graph theory, SNA is one way to study the importance of users... The centrality measure in SNA is one primary assessment for detecting influential nodes...' Graph theory provides the formal structure, and centrality measures are analytical tools applied to that structure.",
+        "reference": "Page 23"
+    },
+    {
+        "q": "If a researcher constructs a network based on 'co-occurrence' where two people are connected if they appear in the same photograph together, this is an example of a(n):",
+        "options": [
+            "Explicit network",
+            "Directed network",
+            "Implicit network",
+            "Weighted network"
+        ],
+        "answer": 2,
+        "explanation": "The classification on page 10 states that implicit networks are derived from user actions, as opposed to being explicitly constructed. Co-occurrence in a photo is an implicit relationship derived from the action of being photographed together.",
+        "reference": "Page 10"
+    },
+    {
+        "q": "Based on the lecture, why is understanding the 'overall structure' of networks important?",
+        "options": [
+            "To see how certain networks differ or converge.",
+            "To identify the number of influential nodes.",
+            "To calculate the exact weight of every link.",
+            "To ensure the network is directed."
+        ],
+        "answer": 0,
+        "explanation": "Page 4 states that a researcher might be interested in the overall structure 'to see how certain networks differ or converge.'",
+        "reference": "Page 4"
+    },
+    {
+        "q": "In a directed graph, the 'Out-degree' of a node is a measure of its:",
+        "options": [
+            "Popularity",
+            "Influence on others (how many others it connects to)",
+            "Betweenness",
+            "Proximity to the center"
+        ],
+        "answer": 1,
+        "explanation": "Page 27 defines 'Out-degree' as the number of edges/connections from a node to other nodes. A node with high out-degree is actively connecting to many others, which can be interpreted as exerting influence (e.g., following many people on Twitter).",
+        "reference": "Page 27"
+    },
+    {
+        "q": "The lecture uses the example of two nodes with the same degree (Page 28) to illustrate what concept?",
+        "options": [
+            "That degree centrality is a global measure.",
+            "That two nodes can be structurally identical.",
+            "That degree is a local measure that does not account for neighbor connectivity.",
+            "That all nodes in a network should have the same degree."
+        ],
+        "answer": 2,
+        "explanation": "The image and text explicitly state: 'Node degree is local, not global' and explain that two nodes have the same number of neighbors, but because their neighbors are different, degree alone doesn't capture influence. This illustrates degree's limitation as a local measure.",
+        "reference": "Page 28"
+    },
+    {
+        "q": "What is the most likely purpose of the final question on page 35, which asks to 'Give the in-degree, out-degree, and eigenvector of each node'?",
+        "options": [
+            "To test understanding of network visualization.",
+            "To apply the concepts of centrality measures to a specific graph for analysis.",
+            "To introduce a new, complex type of network.",
+            "To show that all centrality measures produce the same ranking."
+        ],
+        "answer": 1,
+        "explanation": "The question is presented immediately after explaining degree (in/out) and eigenvector centrality. Its purpose is to provide a practical exercise for the student to apply these just-learned analytical concepts to a concrete example, testing their understanding.",
+        "reference": "Page 35"
+    }
+]
+};
+
+// Track scores per lecture
+const scores = {
+    lecture1: { correct: 0, wrong: 0, answered: 0 },
+    lecture2: { correct: 0, wrong: 0, answered: 0 },
+    lecture3: { correct: 0, wrong: 0, answered: 0 },
+    lecture4: { correct: 0, wrong: 0, answered: 0 },
+    lecture5: { correct: 0, wrong: 0, answered: 0 }
+};
+
+function updateGlobalStats() {
+    let totalAnswered = 0, totalCorrect = 0, totalWrong = 0;
+    for (const key in scores) {
+        totalAnswered += scores[key].answered;
+        totalCorrect += scores[key].correct;
+        totalWrong += scores[key].wrong;
+    }
+    document.getElementById('total-answered').textContent = totalAnswered;
+    document.getElementById('total-correct').textContent = totalCorrect;
+    document.getElementById('total-wrong').textContent = totalWrong;
+    const pct = totalAnswered > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
+    document.getElementById('total-percent').textContent = pct + '%';
+}
+
+function updateLectureStats(lectureId) {
+    const total = quizData[lectureId].length;
+    const s = scores[lectureId];
+    const remaining = total - s.answered;
+    document.getElementById(`correct-count-${lectureId}`).textContent = s.correct + ' Correct';
+    document.getElementById(`wrong-count-${lectureId}`).textContent = s.wrong + ' Wrong';
+    document.getElementById(`pending-count-${lectureId}`).textContent = remaining + ' Remaining';
+    document.getElementById(`progress-text-${lectureId}`).textContent = s.answered + ' / ' + total;
+    const pct = (s.answered / total) * 100;
+    document.getElementById(`progress-fill-${lectureId}`).style.width = pct + '%';
+}
+
+function handleAnswer(lectureId, qIndex, chosenIndex) {
+    const q = quizData[lectureId][qIndex];
+    const card = document.getElementById(`card-${lectureId}-${qIndex}`);
+    const buttons = card.querySelectorAll('.option-btn');
+    const feedback = document.getElementById(`feedback-${lectureId}-${qIndex}`);
+    const reference = document.getElementById(`reference-${lectureId}-${qIndex}`);
+    buttons.forEach(btn => btn.disabled = true);
+
+    const isCorrect = chosenIndex === q.answer;
+
+    if (isCorrect) {
+        buttons[chosenIndex].classList.add('correct');
+        feedback.className = 'feedback correct-feedback';
+        feedback.innerHTML = `<div class="feedback-title">✅ Correct!</div><div class="explanation">${q.explanation}</div>`;
+        scores[lectureId].correct++;
+    } else {
+        buttons[chosenIndex].classList.add('wrong');
+        buttons[q.answer].classList.add('reveal-correct');
+        feedback.className = 'feedback wrong-feedback';
+        feedback.innerHTML = `<div class="feedback-title">❌ Incorrect</div><div class="explanation"><strong>Correct answer:</strong> ${String.fromCharCode(65 + q.answer)}) ${q.options[q.answer]}<br><br>${q.explanation}</div>`;
+        scores[lectureId].wrong++;
+    }
+    reference.innerHTML = `<div class="reference-title">! reference: </div><div class="reference">${q.reference}</div>`;
+    feedback.style.display = 'block';
+    reference.style.display = 'block';
+    scores[lectureId].answered++;
+    updateLectureStats(lectureId);
+    updateGlobalStats();
+}
+
+function renderLecture(lectureId) {
+    const container = document.getElementById(`questions-${lectureId}`);
+    const questions = quizData[lectureId];
+    container.innerHTML = '';
+
+    questions.forEach((q, qIndex) => {
+        const letters = ['A', 'B', 'C', 'D'];
+        const optionsHTML = q.options.map((opt, i) => `
+            <button class="option-btn" onclick="handleAnswer('${lectureId}', ${qIndex}, ${i})">
+                <span class="option-letter">${letters[i]}</span>
+                ${opt}
+            </button>
+        `).join('');
+
+        const card = document.createElement('div');
+        card.className = 'question-card';
+        card.id = `card-${lectureId}-${qIndex}`;
+        card.innerHTML = `
+            <div class="question-header">
+                <div class="question-number">${qIndex + 1}</div>
+                <div class="question-text">${q.q}</div>
+            </div>
+            <div class="options-container">${optionsHTML}</div>
+            <div class="feedback" id="feedback-${lectureId}-${qIndex}"></div>
+            <div class="reference" id="reference-${lectureId}-${qIndex}"></div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function resetLecture(lectureId) {
+    scores[lectureId] = { correct: 0, wrong: 0, answered: 0 };
+    renderLecture(lectureId);
+    updateLectureStats(lectureId);
+    updateGlobalStats();
+}
+
+// Initialize all lectures
+['lecture1', 'lecture2', 'lecture3', 'lecture4', 'lecture5'].forEach(id => {
+    renderLecture(id);
+    updateLectureStats(id);
+});
+updateGlobalStats();
+</script>
